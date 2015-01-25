@@ -32,7 +32,12 @@ for(var i=0; i<builtins.length; i++){
 }
 
 
+// testing
 
+
+var something = function(){
+	alert('testing');
+}
 
 
 

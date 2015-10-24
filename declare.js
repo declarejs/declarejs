@@ -1,3 +1,9 @@
+/*
+* DeclareJS - Object Oriented JavaScript
+* Copyright (c) 2015  http://www.declarejs.org
+* Licenses: https://github.com/declarejs/declarejs/blob/master/License
+*/
+
 
 var declare = function(id, pid, func){declare.builder(id, pid, func, false, false);}; // global
 

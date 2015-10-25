@@ -2,7 +2,7 @@
 * DeclareJS - Object Oriented JavaScript
 * Copyright (c) 2015  http://www.declarejs.org
 * Licenses: https://github.com/declarejs/declarejs/blob/master/License
-
+* testing
 */
 
 

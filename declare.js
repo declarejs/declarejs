@@ -44,6 +44,10 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		// --- WIP
 	},
 
+	check = function(){
+
+	},
+
 	library = function(child){
 		if(building) error('LIBRARY_VIOLATION');
 
@@ -71,23 +75,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	outerMethod = function(){
 		return this;
 	},
-
-	callMethod = function(struct){ // --- IS THIS BEING USED?
-		return function(Obj, method){
-			var args = [];
-			for(var i=2; i<arguments.length; i++) args.push(arguments[i]);
-			if(Obj instanceof struct.outer) struct.members[method].apply(Obj, args);
-			else error('FORBIDDEN_CALL', method, struct.id);
-		}
-	},
-
-	applyMethod = function(struct){ // --- IS THIS BEING USED?
-		return function(Obj, method, args){
-			if(Obj instanceof struct.outer) struct.members[method].apply(Obj, args);
-			else error('FORBIDDEN_CALL', method, struct.id);
-		}
-	},
-
+	
 	staticMethod = function(func, StaticObj){
 		return function(){
 			func.apply(StaticObj, arguments);

@@ -32,20 +32,16 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	// --- functions --- //
 
+
+	same = function(mixed1, mixed2){
+		if(mixed1 === mixed2) return true;
+		if(!(mixed1 instanceof classes.djs.Base) || !(mixed2 instanceof classes.djs.Base)) return false;
+		var classname = mixed1.className();
+		return structs[classname].single ? classname === mixed2.className() : false;
+	},
+
 	className = function(Obj){
-		return Obj.className();
-	},
-
-	on = function(event, func){
-		// --- WIP
-	},
-
-	ready = function(func){
-		// --- WIP
-	},
-
-	check = function(){
-
+		return (Obj instanceof classes.djs.Base) ? Obj.className() : false;
 	},
 
 	library = function(child){
@@ -60,7 +56,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		}
 
 		if(child === undefined) return classes;
-		return libraries[child] ? libraries[child] : error('NO_LIBRARY: ' + child);
+		return libraries[child] ? libraries[child] : false;
 	},
 
 	emptyFunc = function(){},
@@ -100,14 +96,66 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		}
 	},
 
+	datatypeInner = function(id, pid, func){datatype(id, pid, func, true);},
+
+	// --- public functions --- //
+
+	datatype = function(id, pid, func, inner){
+		if(dataTypes[id]) error('DUPLICATE_DATATYPE: ' + id);
+
+		// mixed is default parent
+		if(func === undefined){func = pid; pid = "mixed";}
+
+		if(inner){
+			dataTypes[id] = "djs." + id + "Type";
+			builder(dataTypes[id], "djs." + pid + "Type", func);
+		} else {
+			dataTypes[id] = id.split("_").join(".") + "Type";
+			builder(dataTypes[id], pid.split("_").join(".") + "Type", func);
+		}
+		if(isruntime) dataTypes[id] = new classesbyid[dataTypes[id]];
+	},
+
+	register2 = function(name, mixed, obj){
+
+		switch(typeof(mixed)){
+			case 'object':
+				for(var item in mixed){
+					obj[item] = {};
+					register2(item, mixed[item], obj[item]);
+				}
+			return;
+			case 'function':
+				obj[item] = lib[item];
+			return;
+		}
+
+	},
+
+	register = function(mixed){
+
+		// library
+		if(typeof(mixed) === "string"){
+			classes[mixed] = {};
+			for(var item in arguments[1]) register2(item, arguments[1][item], classes[mixed]);
+			return;
+		}
+
+		// classes
+		for(var i=0; i<arguments.length; i++){
+			if(arguments[i] === Array || arguments[i] === Object) error('FORBIDDEN_CLASS', ((arguments[i] === Array) ? 'Array' : 'Object') + ' class');
+			classfunc.prototype.__outer = outerMethod;
+		}
+	},
+
 	config = function(name, value){
 		if(typeof(name) === 'object'){for(var item in name) configs[item] = name[item];} 
 		else if(value === undefined) return configs[name];
 		else configs[name] = value;
 	},
 
-	falsy = function(mixed, type){
-		return dataTypes[type] ? dataTypes[type].falsy(mixed) : dataTypes["mixed"].falsy(mixed);
+	falseLike = function(mixed, type){
+		return dataTypes[type] ? dataTypes[type].falseLike(mixed) : dataTypes["mixed"].falseLike(mixed);
 	},
 
 	is = function(mixed, type, strict){
@@ -136,30 +184,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		return (mixed === undefined) ? error('BAD_TYPE: ' + type) : mixed;
 	},
 
-	datatypeInner = function(id, pid, func){datatype(id, pid, func, true);},
-
-	datatype = function(id, pid, func, inner){
-		if(dataTypes[id]) error('DUPLICATE_DATATYPE: ' + id);
-
-		// mixed is default parent
-		if(func === undefined){func = pid; pid = "mixed";}
-
-		if(inner){
-			dataTypes[id] = "djs." + id + "Type";
-			builder(dataTypes[id], "djs." + pid + "Type", func);
-		} else {
-			dataTypes[id] = id.split("_").join(".") + "Type";
-			builder(dataTypes[id], pid.split("_").join(".") + "Type", func);
-		}
-		if(isruntime) dataTypes[id] = new classesbyid[dataTypes[id]];
-	},
-
-	outsideClass = function(classfunc){
-		for(var i=0; i<arguments.length; i++){
-			if(arguments[i] === Array || arguments[i] === Object) error('FORBIDDEN_CLASS', ((arguments[i] === Array) ? 'Array' : 'Object') + ' class');
-			classfunc.prototype.__outer = outerMethod;
-		}
-	},
+	// --- builder --- //
 
 	builder = function(id, pid, func, single, abstract){
 		building = true;
@@ -171,7 +196,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		var parentProvided = (func !== undefined);
 		if(!parentProvided){
 			func = pid;
-			pid = "djs.base";
+			pid = "djs.Base";
 		} else if(classesbyid[pid]===undefined){
 			error('BAD_PARENT_CLASS', pid);
 		}
@@ -380,7 +405,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		// register native classes
 
-		outsideClass(Date);
+		register(Date);
 
 		// --- built in classes --- //
 
@@ -535,7 +560,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 				return (this.cast(value, strict) !== undefined);
 			}
 
-			self.falsy = function(value){
+			self.falseLike = function(value){
 				return (!value || value === "" || value === "0" || value === null);
 			}
 
@@ -621,7 +646,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 				if(parts.length === 2 && parts[0].split("-").length === 3 && parts[1].split(":").length === 3) return value;
 			}
 
-			self.falsy = function(value){
+			self.falseLike = function(value){
 				value = this.cast(value);
 				return (value === undefined || value === "0000-00-00 00:00:00");
 			}
@@ -721,7 +746,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	// other globals
 	var globals = {
-		falsy: falsy,
+		falseLike: falseLike,
 		is: is, 
 		cast: cast, 
 		castAbs: castAbs, 
@@ -731,7 +756,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		builder: builder, 
 		className: className,
 		version: function(){return version},
-		outsideClass: outsideClass,
+		register: register,
 		datatype: datatype
 		}
 	for(var item in globals) d[item] = globals[item];
@@ -741,7 +766,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 
 	var baseStruct = {
-		id: "djs.base",
+		id: "djs.Base",
 		statics: {}, 
 		protecteds: {__access: accessMethod},
 		publics: {__construct: emptyFunc},
@@ -758,7 +783,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	structs[baseStruct.id] = baseStruct;
 	classesbyid[baseStruct.id] = baseStruct.outer;
 	classes.djs = libraries.djs = {}; // init classes and libraries
-	classes.djs.base = baseStruct.outer;
+	classes.djs.Base = baseStruct.outer;
 	//outer.className = function(){return baseStruct.id;}
 
 	// --- initiate --- //

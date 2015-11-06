@@ -44,6 +44,10 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		// --- WIP
 	},
 
+	check = function(){
+
+	},
+
 	library = function(child){
 		if(building) error('LIBRARY_VIOLATION');
 

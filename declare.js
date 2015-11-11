@@ -1,3 +1,5 @@
+console.log("loaded declare.js");
+
 /*
 * DeclareJS - Object Oriented JavaScript
 * Copyright (c) 2015  http://www.declarejs.org
@@ -14,7 +16,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	var version = '1.0.0',
 	debug = true,
-	debug_datatypes = true,
+	debug_types = true,
 	isruntime = false,
 	building = false,
 	reserveds = {"protected": true, "static": true, "public": true, "final": true},
@@ -44,16 +46,31 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		return (Obj instanceof classes.djs.Base) ? Obj.className() : false;
 	},
 
-	library = function(child){
+	runtime = function(){
+
+		// it's runtime!
+		if(isruntime) return;
+		isruntime = true;
+
+
+		for(var item in dataTypes){
+			dataTypes[item] = new classesbyid[dataTypes[item]];
+		}
+	
+	},
+
+
+	library = function(name, func){
+		
+	},
+
+	getLibrary = function(child){
+
+		// still building?
 		if(building) error('LIBRARY_VIOLATION');
 
 		// it's runtime!
-		if(!isruntime){
-			isruntime = true;
-			for(var item in dataTypes){
-				dataTypes[item] = new classesbyid[dataTypes[item]];
-			}
-		}
+		runtime();
 
 		if(child === undefined) return classes;
 		return libraries[child] ? libraries[child] : false;
@@ -63,7 +80,8 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 
 	error = function(code, str, id){
-		if(str) code += ': ' + str;
+		if(str instanceof Object) console.log(str);
+		else if(str) code += ': ' + str;
 		if(id) code += '     CLASS: ' + id + '';
 		throw new Error(code);
 	},
@@ -85,34 +103,59 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	},
 
 	publicMethod = function(item, method, inner){
+
+		return function(){
+				for(var i=0; i<arguments.length; i++){
+					if(typeof(arguments[i]) === "object"){ 
+						arguments[i] = (arguments[i].__outer === undefined) ? error("FORBIDDEN_PARAM", arguments[i]) : arguments[i].__outer();
+					}
+				
+				var r = method.apply(inner, arguments);
+				if(typeof(r) === "object") return r.__outer === undefined ? error("FORBIDDEN_RETURN") : r.__outer();
+				return r;
+			}
+
+		}
+
+		/*
 		return function(){
 			try {
 				for(var i=0; i<arguments.length; i++) arguments[i] = (arguments[i] instanceof Object) ? arguments[i].__outer() : arguments[i];
 				var r = method.apply(inner, arguments);
-				return (r instanceof Object) ? r.__outer() : r;
+				if(r instanceof Object) return r.__outer === undefined ? error("FORBIDDEN_OBJECT222") : r.__outer();
+				return r;
+				//return (r instanceof Object) ? r.__outer() : r;
 			} catch(e){
 				error('FORBIDDEN_OBJECT', 'using ' + item + '()');
 			}
 		}
+		*/
 	},
 
-	datatypeInner = function(id, pid, func){datatype(id, pid, func, true);},
+	typeInner = function(id, pid, func){type(id, pid, func, true);},
 
 	// --- public functions --- //
 
-	datatype = function(id, pid, func, inner){
+	type = function(id, pid, func, inner){
 		if(dataTypes[id]) error('DUPLICATE_DATATYPE: ' + id);
 
 		// mixed is default parent
 		if(func === undefined){func = pid; pid = "mixed";}
 
+		// check for malformed names
+		if(debug && id.toLowerCase() !== id) error('BAD_TYPE_NAME: ' + id + " must be " + id.toLowerCase());
+
+		// internal or public type
 		if(inner){
 			dataTypes[id] = "djs." + id + "Type";
 			builder(dataTypes[id], "djs." + pid + "Type", func);
 		} else {
-			dataTypes[id] = id.split("_").join(".") + "Type";
-			builder(dataTypes[id], pid.split("_").join(".") + "Type", func);
+			dataTypes[id] = id + "Type";
+			builder(dataTypes[id], pid + "Type", func);
 		}
+
+
+		// is runtime?
 		if(isruntime) dataTypes[id] = new classesbyid[dataTypes[id]];
 	},
 
@@ -142,10 +185,18 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		}
 
 		// classes
+		/*
 		for(var i=0; i<arguments.length; i++){
 			if(arguments[i] === Array || arguments[i] === Object) error('FORBIDDEN_CLASS', ((arguments[i] === Array) ? 'Array' : 'Object') + ' class');
 			classfunc.prototype.__outer = outerMethod;
 		}
+		*/
+	},
+
+	getType = function(mixed){
+		var t = typeof(mixed);
+		if(t === "object") return t.__outer === undefined ? t : t.className();
+		return r;
 	},
 
 	config = function(name, value){
@@ -293,8 +344,8 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		}
 
 		// call / apply - KEEP AFTER FUNC CALL
-		outer.call = inner.call = callMethod(struct);
-		outer.apply = inner.apply = applyMethod(struct);
+		//outer.call = inner.call = callMethod(struct);
+		//outer.apply = inner.apply = applyMethod(struct);
 
 
 		// forced public method
@@ -403,9 +454,6 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	init = function(){
 
-		// register native classes
-
-		register(Date);
 
 		// --- built in classes --- //
 
@@ -416,6 +464,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			self.protected.items = undefined;
 
 			self.__construct = function(){
+				runtime();
 				this.items = {};
 				for(var i=0; i<arguments.length; i+=2) this.set(arguments[i], arguments[i+1]);
 			}
@@ -464,6 +513,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		d("djs.MapOf", "djs.Map", function(self, classes){
 
 			self.__construct = function(type, items){
+				runtime();
 				this.items = {};
 				if(type) this.type(type);
 				if(items === undefined) return;
@@ -478,6 +528,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 
 			self.__construct = function(){
+				runtime();
 				this.items = [];
 				for(var i=0; i<arguments.length; i++) this.push(arguments[i]);
 			}
@@ -533,6 +584,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		d("djs.ListOf", "djs.List", function(self, classes){
 
 			self.__construct = function(type, arr){
+				runtime();
 				this.items = [];
 				if(type) this.type(type);
 				if(arr === undefined) return;
@@ -542,13 +594,20 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			// END OF CLASS
 		});
 
+		// add to global
+		d.Base = classes.djs.Base;
+		d.Map = classes.djs.Map;
+		d.MapOf = classes.djs.MapOf;
+		d.List = classes.djs.List;
+		d.ListOf = classes.djs.ListOf;
 
 
 
-		// --- datatypes --- //
+
+		// --- types --- //
 
 
-		// base datatype
+		// base type
 		dataTypes["mixed"] = "djs.mixedType";
 		builder("djs.mixedType", function(self){ // the base type
 
@@ -567,7 +626,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		});
 
 
-		datatypeInner("scalar", function(self){
+		typeInner("scalar", function(self){
 
 			self.cast = function(value, strict){
 				switch(typeof(value)){
@@ -578,7 +637,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("bool", "scalar", function(self){
+		typeInner("bool", "scalar", function(self){
 
 			self.cast = function(value, strict){
 				switch(typeof(value)){
@@ -591,7 +650,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("number", "scalar", function(self){
+		typeInner("number", "scalar", function(self){
 
 			self.cast = function(value, strict){
 				switch(typeof(value)){
@@ -604,7 +663,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("int", "number", function(self){
+		typeInner("int", "number", function(self){
 
 			self.cast = function(value, strict){
 				value = parent.cast.call(this, value, strict);
@@ -613,7 +672,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("string", "scalar", function(self){
+		typeInner("string", "scalar", function(self){
 
 			self.cast = function(value, strict){
 				switch(typeof(value)){
@@ -626,7 +685,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("email", "string", function(self, parent){
+		typeInner("email", "string", function(self, parent){
 
 			self.cast = function(str){
 				str = parent.cast.call(this, str, true);
@@ -637,7 +696,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("timestamp", "string", function(self, parent){
+		typeInner("timestamp", "string", function(self, parent){
 
 			self.cast = function(value, strict){
 				value = parent.cast.call(this, value, true);
@@ -653,7 +712,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("type", function(self){
+		typeInner("type", function(self){
 
 			self.cast = function(value){
 				if(dataTypes[value]) return true;
@@ -662,7 +721,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("class", function(self, parent){
+		typeInner("class", function(self, parent){
 
 			self.cast = function(value){
 				return (typeof(value) === "function" && value.__outer) ? value : undefined;
@@ -670,7 +729,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("function", function(self){
+		typeInner("function", function(self){
 
 			self.cast = function(value){
 				return (typeof(value) === "function") ? value : undefined;
@@ -678,7 +737,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		});
 
-		datatypeInner("object", function(self){
+		typeInner("object", function(self){
 
 			self.cast = function(value){
 				return (typeof(value) === "object") ? value : undefined;
@@ -751,13 +810,14 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		cast: cast, 
 		castAbs: castAbs, 
 		mustCast: mustCast,
+		getLibrary: getLibrary, 
 		library: library, 
 		config: config, 
 		builder: builder, 
 		className: className,
 		version: function(){return version},
 		register: register,
-		datatype: datatype
+		type: type
 		}
 	for(var item in globals) d[item] = globals[item];
 

@@ -7,7 +7,7 @@ console.log("loaded declare.js");
 */
 
 
-var declare = function(id, pid, func){declare.builder(id, pid, func, false, false);}; // global
+var declare = function(id, pid, func){declare.builder(id, pid, func, false, false, arguments);}; // global
 
 
 (function(d){
@@ -23,10 +23,11 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	types = {"class": true, "type": true, "scalar": true, "number": true, "boolean": true, "function": true},
 	scalars = {"scalar": true, "number": true, "boolean": true},
 	dataTypes = {},
-	classes = {},
-	classesbyid = {},
+	_classes = {},
+	_classesbyid = {},
 	structs = {},
-	libraries = {},
+	//_classes = {},
+	//_classesbyid = {},
 	configs = {
 		debug: true
 	},
@@ -37,13 +38,13 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	same = function(mixed1, mixed2){
 		if(mixed1 === mixed2) return true;
-		if(!(mixed1 instanceof classes.djs.Base) || !(mixed2 instanceof classes.djs.Base)) return false;
+		if(!(mixed1 instanceof _classes.djs.Base) || !(mixed2 instanceof _classes.djs.Base)) return false;
 		var classname = mixed1.className();
 		return structs[classname].single ? classname === mixed2.className() : false;
 	},
 
 	className = function(Obj){
-		return (Obj instanceof classes.djs.Base) ? Obj.className() : false;
+		return (Obj instanceof _classes.djs.Base) ? Obj.className() : false;
 	},
 
 	runtime = function(){
@@ -54,17 +55,82 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 
 		for(var item in dataTypes){
-			dataTypes[item] = new classesbyid[dataTypes[item]];
+			dataTypes[item] = new _classesbyid[dataTypes[item]];
 		}
 	
 	},
 
+	loadLibrary = function(name){
+		if(_classesbyid[name]) return _classesbyid[name];
 
-	library = function(name, func){
+		console.log("**** loadLibrary(): " + name);
+
+		
+			
+		var parts = name.split("."),
+			libname = "";
+			lib = _classes; // start with base library
+
+		for(var i=0; i<parts.length; i++){
+			var part = parts[i];
+			libname += libname.length ? ("." + part) : parts[i];
+
+			// if library exists, continue
+			if(!_classesbyid[libname]) lib[part] = _classesbyid[libname] = {};
+
+			// keep it going
+			lib = lib[part];
+
+		}
+
+		
+		return lib;
 		
 	},
 
-	getLibrary = function(child){
+	library = function(id, func){
+		classes();
+
+		// check name
+		if(debug && id.toLowerCase() !== id) error("MALFORMED_LIBRARY_NAME: " + id);
+
+		// vars
+		var lib = loadLibrary(id),
+			innerClass = function(){},
+			data = {protected: {}, public: {}}; // no static members for classes!
+
+		// libraries
+		var params = [data];
+		if(arguments.length == 2) params.push(_classes); // no specified libraries
+		else {
+			for(var i=2; i<arguments.length; i++) params.push(loadLibrary(arguments[i]));
+		}
+
+		// load members
+		func.apply(window, params);
+
+		// parse implied members
+		for(var item in data){
+			if(item === "protected" || item === "public") continue;
+			if(typeof(data[item]) === "function") data.public[item] = data[item]; // functions are implied public
+			else data.protected[item] = data[item]; // non-functions are implied protected
+		}
+
+		// protected members
+		for(var item in data.public) innerClass.prototype[item] = data.public[item];
+		
+		// create protected object - keep here!
+		var inner = new innerClass();
+
+		// public members
+		for(var item in data.public){
+			if(typeof(data.public[item]) !== "function") error('PUBLIC_DATA_MEMBER', item, id);
+			lib[item] = publicMethod(item, data.public[item], inner);
+		}
+
+	},
+
+	classes = function(id){
 
 		// still building?
 		if(building) error('LIBRARY_VIOLATION');
@@ -72,8 +138,8 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		// it's runtime!
 		runtime();
 
-		if(child === undefined) return classes;
-		return libraries[child] ? libraries[child] : false;
+		if(id === undefined) return _classes;
+		return _classesbyid[id] ? _classesbyid[id] : false;
 	},
 
 	emptyFunc = function(){},
@@ -105,16 +171,15 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	publicMethod = function(item, method, inner){
 
 		return function(){
-				for(var i=0; i<arguments.length; i++){
-					if(typeof(arguments[i]) === "object"){ 
-						arguments[i] = (arguments[i].__outer === undefined) ? error("FORBIDDEN_PARAM", arguments[i]) : arguments[i].__outer();
-					}
-				
-				var r = method.apply(inner, arguments);
-				if(typeof(r) === "object") return r.__outer === undefined ? error("FORBIDDEN_RETURN") : r.__outer();
-				return r;
+			for(var i=0; i<arguments.length; i++){
+				if(typeof(arguments[i]) === "object"){ 
+					arguments[i] = (arguments[i].__outer === undefined) ? error("FORBIDDEN_PARAM", arguments[i]) : arguments[i].__outer();
+				}
 			}
-
+			
+			var r = method.apply(inner, arguments);
+			if(typeof(r) === "object") return r.__outer === undefined ? error("FORBIDDEN_RETURN") : r.__outer();
+			return r;
 		}
 
 		/*
@@ -156,7 +221,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 
 		// is runtime?
-		if(isruntime) dataTypes[id] = new classesbyid[dataTypes[id]];
+		if(isruntime) dataTypes[id] = new _classesbyid[dataTypes[id]];
 	},
 
 	register2 = function(name, mixed, obj){
@@ -179,12 +244,12 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		// library
 		if(typeof(mixed) === "string"){
-			classes[mixed] = {};
-			for(var item in arguments[1]) register2(item, arguments[1][item], classes[mixed]);
+			_classes[mixed] = {};
+			for(var item in arguments[1]) register2(item, arguments[1][item], _classes[mixed]);
 			return;
 		}
 
-		// classes
+		// _classes
 		/*
 		for(var i=0; i<arguments.length; i++){
 			if(arguments[i] === Array || arguments[i] === Object) error('FORBIDDEN_CLASS', ((arguments[i] === Array) ? 'Array' : 'Object') + ' class');
@@ -237,22 +302,36 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	// --- builder --- //
 
-	builder = function(id, pid, func, single, abstract){
+	builder = function(id, pid, func, single, abstract, args){
 		building = true;
 
 		// check arguments
-		if(classesbyid[id]!==undefined) error('DUPLICATE_CLASS', id);
+		if(_classesbyid[id]!==undefined) error('DUPLICATE_CLASS', id);
 
 		// has parent?
 		var parentProvided = (func !== undefined);
 		if(!parentProvided){
 			func = pid;
 			pid = "djs.Base";
-		} else if(classesbyid[pid]===undefined){
+		} else if(_classesbyid[pid]===undefined){
 			error('BAD_PARENT_CLASS', pid);
 		}
 		var pstruct = structs[pid];
-		if(pstruct.single) single = true; // all child classes to a singleton must be singletons
+		if(pstruct.single) single = true; // all child _classes to a singleton must be singletons
+
+		// has libraries
+		var libs = [];
+		if(args !== undefined){
+			var afterfunc = false;
+			for(var i=0; i<args.length; i++){
+				if(afterfunc) libs.push(loadLibrary(args[i]));
+				else if(typeof(args[i]) === "function") afterfunc = true;
+			}
+		}
+		if(!libs.length) libs = _classes;
+
+
+		console.log("LIBS: " + libs.length);
 
 		// setting
 		var publics = {},
@@ -310,8 +389,16 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			}
 		}
 
-		// add outer class to classesbyid array
-		classesbyid[id] = struct.outer = outer;
+		// add outer class to _classesbyid array
+
+		var idparts = id.split('.');
+		var basename = idparts.pop();
+		var libname = idparts.join(".");
+		//console.log("=== testing: " + libname + ", " + basename);
+		var lib = loadLibrary(libname);
+
+		lib[basename] = _classesbyid[id] = struct.outer = outer;
+		//struct.outer = outer;
 
 		// extends
 		outer.prototype = new pstruct.outer;
@@ -328,7 +415,10 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		}
 
 		// call class definition function
-		parentProvided ? func(struct.outer, pstruct.outer, classes) : func(struct.outer, classes);
+		// --- OLD: parentProvided ? func(struct.outer, pstruct.outer, _classes) : func(struct.outer, _classes);
+		var params = parentProvided ? [struct.outer, pstruct.outer] : [struct.outer];
+		for(var i=0; i<libs.length; i++) params.push(libs[i]);
+		func.apply(window, params);
 
 		// check for reserved word usage
 		for(var item in reserveds){
@@ -427,23 +517,6 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		delete outer.static;
 		delete outer.final;
 
-		// classes object
-		var idparts = id.split('.');
-		if(idparts.length < 2) error("NO_VENDOR_PREFIX: " + id);
-		var arr = classes;
-		var libname = "";
-		for(var i=0; i<idparts.length-1; i++){
-			var part = idparts[i];
-			libname += libname.length ? ("." + part) : part;
-			if(arr[part] === undefined){
-				arr[part] = {};
-				libraries[libname] = arr[part];
-			}
-			else if(typeof(arr[part]) !== 'object') error('BAD_CLASS_NAME', id);
-			arr = arr[part];
-		}
-		arr[idparts[i]] = outer;
-
 		// no more building
 		building = false;
 
@@ -455,10 +528,10 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	init = function(){
 
 
-		// --- built in classes --- //
+		// --- built in _classes --- //
 
 
-		d("djs.Map", function(self, classes){
+		d("djs.Map", function(self, _classes){
 
 			self.protected._type = false;
 			self.protected.items = undefined;
@@ -510,7 +583,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			// END OF CLASS
 		});
 
-		d("djs.MapOf", "djs.Map", function(self, classes){
+		d("djs.MapOf", "djs.Map", function(self, _classes){
 
 			self.__construct = function(type, items){
 				runtime();
@@ -524,7 +597,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		});
 
 
-		d("djs.List", "djs.Map", function(self, parent, classes){
+		d("djs.List", "djs.Map", function(self, parent, _classes){
 
 
 			self.__construct = function(){
@@ -581,7 +654,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			// END OF CLASS
 		});
 		
-		d("djs.ListOf", "djs.List", function(self, classes){
+		d("djs.ListOf", "djs.List", function(self, _classes){
 
 			self.__construct = function(type, arr){
 				runtime();
@@ -595,11 +668,11 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		});
 
 		// add to global
-		d.Base = classes.djs.Base;
-		d.Map = classes.djs.Map;
-		d.MapOf = classes.djs.MapOf;
-		d.List = classes.djs.List;
-		d.ListOf = classes.djs.ListOf;
+		d.Base = _classes.djs.Base;
+		d.Map = _classes.djs.Map;
+		d.MapOf = _classes.djs.MapOf;
+		d.List = _classes.djs.List;
+		d.ListOf = _classes.djs.ListOf;
 
 
 
@@ -779,7 +852,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 		// --- js library --- //
 
-		libraries.js = {
+		_classes.js = {
 			Object: Object, 
 			Array: Array, 
 			Date: Date, 
@@ -794,14 +867,16 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			Window: Window
 		};
 
+		_classesbyid.js = _classes.js; // add classes by id
+
 	}; // END INIT / END FUNCTIONS
 
 
 	// --- public functions --- //
 
-	d.singleton = function(id, pid, func){builder(id, pid, func, true, false);}
-	d.abstract = function(id, pid, func){builder(id, pid, func, false, true);}
-	d.abstract.singleton = d.singleton.abstract = function(id, pid, func){builder(id, pid, func, true, true);}
+	d.singleton = function(id, pid, func){builder(id, pid, func, true, false, arguments);}
+	d.abstract = function(id, pid, func){builder(id, pid, func, false, true, arguments);}
+	d.abstract.singleton = d.singleton.abstract = function(id, pid, func){builder(id, pid, func, true, true, arguments);}
 
 	// other globals
 	var globals = {
@@ -810,7 +885,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		cast: cast, 
 		castAbs: castAbs, 
 		mustCast: mustCast,
-		getLibrary: getLibrary, 
+		classes: classes, 
 		library: library, 
 		config: config, 
 		builder: builder, 
@@ -824,9 +899,9 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	// --- base class --- //
 
-
+	var baseid = "djs.Base";
 	var baseStruct = {
-		id: "djs.Base",
+		id: baseid,
 		statics: {}, 
 		protecteds: {__access: accessMethod},
 		publics: {__construct: emptyFunc},
@@ -840,11 +915,14 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	}
 
 	d._class = baseStruct.outer;
-	structs[baseStruct.id] = baseStruct;
-	classesbyid[baseStruct.id] = baseStruct.outer;
-	classes.djs = libraries.djs = {}; // init classes and libraries
-	classes.djs.Base = baseStruct.outer;
-	//outer.className = function(){return baseStruct.id;}
+	structs[baseid] = baseStruct;
+
+	// add base class
+	_classes[baseid] = _classesbyid[baseid] = baseStruct.outer;
+
+	// add djs library
+	_classes.djs = _classesbyid.djs = {}; // init _classes
+	_classes.djs.Base = baseStruct.outer;
 
 	// --- initiate --- //
 

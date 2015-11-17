@@ -28,6 +28,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	structs = {},
 	//_classes = {},
 	//_classesbyid = {},
+	handlers = {},
 	configs = {
 		debug: true
 	},
@@ -35,6 +36,30 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	// --- functions --- //
 
+	on = function(event, func){ 
+		func = mustCast(func, 'function');
+		if(handlers[event]){
+
+			// is triggered once?
+			if(handlers[event]["triggered"]) func.apply({}, handlers[event]);
+			else handlers[event].push(func);
+		}
+		else handlers[event] = [func];
+	},
+
+	trigger = function(event){
+		if(!handlers[event]) return;
+		for(var i=0; i<handlers[event].length; i++) handlers[event][i].apply({}, arguments);
+	},
+
+	triggerOnce = function(event){
+		if(handlers[event]) {
+			for(var i=0; i<handlers[event].length; i++) handlers[event][i].apply({}, arguments);
+		}
+		// save arguments and set indicator
+		handlers[event] = arguments;
+		handlers[event].triggered = true;
+	},
 
 	same = function(mixed1, mixed2){
 		if(mixed1 === mixed2) return true;
@@ -330,8 +355,6 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		}
 		if(!libs.length) libs = _classes;
 
-
-		console.log("LIBS: " + libs.length);
 
 		// setting
 		var publics = {},
@@ -881,6 +904,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	// other globals
 	var globals = {
 		falseLike: falseLike,
+		on: on,
 		is: is, 
 		cast: cast, 
 		castAbs: castAbs, 

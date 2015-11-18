@@ -36,6 +36,10 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 	// --- functions --- //
 
+	toFunction = function(obj, method){
+		return function(){return obj[method].apply(obj, arguments);}
+	}
+
 	on = function(event, func){ 
 		func = mustCast(func, 'function');
 		if(handlers[event]){
@@ -334,12 +338,13 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 		if(_classesbyid[id]!==undefined) error('DUPLICATE_CLASS', id);
 
 		// has parent?
-		var parentProvided = (func !== undefined);
-		if(!parentProvided){
+		var parentProvided = (typeof(pid) === "string");
+		if(!parentProvided){ // no parent
 			func = pid;
 			pid = "djs.Base";
-		} else if(_classesbyid[pid]===undefined){
-			error('BAD_PARENT_CLASS', pid);
+		} else {
+			if(func === undefined) func = function(){};
+			if(_classesbyid[pid]===undefined) error('BAD_PARENT_CLASS', pid);
 		}
 		var pstruct = structs[pid];
 		if(pstruct.single) single = true; // all child _classes to a singleton must be singletons
@@ -599,7 +604,9 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			}
 
 			self.each = function(func){
-				for(var item in this.items) func(item, this.items[item]);
+				for(var item in this.items){
+					if(func(item, this.items[item]) === false) return this;
+				}
 				return this;
 			}
 
@@ -649,6 +656,7 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 			self.count = function(){return this.items.length; }
 
+
 			self.set = function(pos, value){
 				for(var i=0; i<arguments.length; i++){
 					pos = arguments[i];
@@ -661,7 +669,9 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			}
 
 			self.each = function(func){
-				for(var i=0; i<this.items.length; i++) func(i, this.items[i]);
+				for(var i=0; i<this.items.length; i++){
+					if(func(i, this.items[i]) === false) return this;
+				}
 				return this;
 			}
 
@@ -673,6 +683,8 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 			}
 
 			for(var item in methods) self.public[item] = pass(item, methods[item]);
+
+			self.public.append = self.public.push;
 
 			// END OF CLASS
 		});
@@ -904,6 +916,8 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 	// other globals
 	var globals = {
 		falseLike: falseLike,
+		error: error,
+		toFunction: toFunction,
 		on: on,
 		is: is, 
 		cast: cast, 

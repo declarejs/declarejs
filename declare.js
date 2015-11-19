@@ -589,6 +589,10 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 				return c;
 			}
 
+			self.has = function(name){
+				return this.items[name] !== undefined;
+			}
+
 			self.get = function(name, _else){
 				return (this.items[name] === undefined) ? _else : this.items[name];
 			}
@@ -625,6 +629,46 @@ var declare = function(id, pid, func){declare.builder(id, pid, func, false, fals
 
 			// END OF CLASS
 		});
+
+		// --- NEW:
+
+		d("djs.ListMap", "djs.Map", function(self, _classes){
+
+			self._itemtype = "mixed";
+
+			self.__construct = function(itemtype){
+				runtime();
+				this.items = {};
+				this._type = d.List;
+				if(itemtype) this._itemtype = itemtype;
+			}
+
+			self.add = function(name, mixed){
+				if(!this.items[name]) this.items[name] = new declare.ListOf(this._itemtype, mixed);
+				else this.items[name].push(mixed);
+				return this;
+			}
+
+			self.hasType = function(name, type){
+				if(!type){
+					type = name;
+					for(var item in this.items){
+						var List = this.items[item];
+						List.each(this, function(key, value){
+							if(!declare.is(value, type)) return;
+							
+							return false;
+						});
+					}
+				}
+				if(!this.items[name]) return this;
+				// --- WIP
+				return false;
+			}
+
+			// END OF CLASS
+		});
+
 
 
 		d("djs.List", "djs.Map", function(self, parent, _classes){

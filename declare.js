@@ -1,11 +1,11 @@
 
-define([], function(){
-
+declarejs = (function(){
 
 	var version = '2.0.0',
 	debug = true,
 	inspecting = false,
 	userules = false, // no rules for internal (see bottom)
+	compiling = false,
 	aliases = {},	// see init()
 	scalars = {string: 1, number: 1, boolean: 1},
 	structs = {}, 	// class structures
@@ -27,11 +27,31 @@ define([], function(){
 
 	},
 
+	config = function(name, value){
+		if(value === undefined) return configs[name];
+
+		switch(name){
+			case 'debug': debug = !!debug; break;
+			case 'userules': userules = !!userules; break;
+			default:
+				if(typeof(name) === "object"){
+					for(var item in name) config(item, name[item]);
+				}
+			break;
+		}
+	},
+
 	inspect = function(){
 		if(debug) debugger;
 	},
 
 	emptyFunc = function(){},
+
+	abstractMethod = function(classname, name){
+		return function(){
+			error("abstractMethod", classname + "::" + name + "()");
+		}
+	},
 
 	mustCast = function(value, type){
 		var value2 = cast(value, type);
@@ -73,7 +93,6 @@ define([], function(){
 		}
 	},
 
-	compiling = false,
 	compile = function(){
 		if(!compiles.length || compiling) return;
 		compiling = true;
@@ -85,7 +104,7 @@ define([], function(){
 	},
 
 	get = function(name){
-		if(compiles.length) compile();
+		if(!classes[name]) assemble(name);
 		return classes[name] || window[name] || assemble(name).c;
 	},
 
@@ -123,6 +142,12 @@ define([], function(){
 			switch(part){
 				case "static": member[part] = true; break;
 				case "protected": case "private": case "public": member.access = part; break;
+				case "abstract": 
+					rawtype = "function";
+					member.ismethod = true;
+					member[part] = true;
+					if(pmember[part] === undefined) data = abstractMethod(struct.name, name); 
+				break; 
 				case "all": // START accessors
 				case "get": 
 					if(!members["get_"+name]) addMember("get_"+name, function(){return this[member.key];}, struct); 
@@ -130,7 +155,9 @@ define([], function(){
 				case "set": 
 					if(!members["set_"+name]) addMember("set_"+name, function(value){this[member.key] = cast(value, member.type); return this;}, struct); 
 				break; // END accessors
-				default: if(part.length) member.type = true; break;
+				default: 
+					if(part.length) member.type = part; // non-empty part must be the type
+				break;
 			}
 		}
 
@@ -178,7 +205,7 @@ define([], function(){
 	checkName = function(name){
 		if(name.split(".").length < 2) missingPrefixError(name); // dot required and no spaces allowed
 		if(name.split(" ").length > 1) malformedError(name); // dot required and no spaces allowed
-	}
+	},
 
 	template = function(header, func){
 		var parts = header.split(">").shift().split("<"),
@@ -247,6 +274,7 @@ define([], function(){
 		struct.keys = {};
 		struct.members = {};
 		struct.members_new = {};
+		struct.members_bykey = {};
 
 		// parse header
 		for(var i=0; i<parts2.length; i++){
@@ -335,7 +363,10 @@ define([], function(){
 
 		// settings
 		var c = struct.c,
-			parent = struct.parent;
+			parent = struct.parent,
+			proto = c.prototype,
+			keys = struct.keys,
+			members_bykey = struct.members_bykey;
 
 		// parent?
 		if(parent){
@@ -343,7 +374,7 @@ define([], function(){
 
 			// copy members and keys
 			var pc = parent.c;
-			for(var item in pc.prototype) c[name] = c.prototype[item] = pc.prototype[item];
+			for(var item in pc.prototype) c[name] = proto[item] = pc.prototype[item];
 			for(var item in parent.members) struct.members[item] = parent.members[item];
 			for(var item in parent.keys) struct.keys[item] = parent.keys[item];
 
@@ -358,18 +389,32 @@ define([], function(){
 		// add new members
 		for(var item in newmembers) addMember(item, newmembers[item], struct);
 
-		// add extras
-		c.__class = c.prototype.__class = name;
-		c.__parent = c.prototype.__parent = parent ? parent.name : false;
-		if(!c.prototype.__construct) c.prototype.__construct = c.__construct = emptyFunc;
+		// add class / parent
+		c.__class = proto.__class = name;
+		c.__parent = proto.__parent = parent ? parent.name : false;
+		if(!proto.__construct) proto.__construct = c.__construct = emptyFunc;
+
+		// add setter / getter
+		for(var item in keys) members_bykey[keys[item]] = struct.members[item];
+		if(debug){
+			proto.__get = function(key){return members_bykey[key] ? this[key] : missingError(name + "::" + key);}
+			proto.__set = function(key, value){
+				if(!members_bykey[key]) missingError(name + "::" + key);
+				this[key] = cast(value, members_bykey[key].type);
+			}
+		} else {
+			proto.__get = function(key){return this[key];}
+			proto.__set = function(key, value){this[key] = cast(value, members_bykey[key].type);}
+		}
+
 
 		// non-abstract constructors (see declare for abstract constructor)
 		if(!struct.abstract){
 			// standard and singletons
-			if(!struct.singleton) c.prototype.__realconstruct = c.prototype.__construct; 
+			if(!struct.singleton) proto.__realconstruct = proto.__construct; 
 			else {
 				// singleton...
-				c.prototype.__realconstruct = function(){
+				proto.__realconstruct = function(){
 					if(singles[name]) error("multiSingletons", name);
 					singles[name] = this;
 					this.__construct.apply(this, arguments);
@@ -644,4 +689,7 @@ define([], function(){
 	if(debug) declare.inspect = inspect; // internal use only
 	return declare;
 
-});
+})();
+
+// require js
+if(window["define"]) window["define"]([], declarejs);

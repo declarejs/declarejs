@@ -21,7 +21,7 @@ and more...
 ```
 <html><head><title>declarejs</title>
 
-<script type="text/javascript" src="../../declare.js"></script>
+<script type="text/javascript" src="declare.js"></script>
 <script type="text/javascript">
 
 var declare = declarejs;

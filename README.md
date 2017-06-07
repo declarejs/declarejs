@@ -9,7 +9,7 @@ Easily create JavaScript classes with protected members.  Provides structure and
 
 and more...
 - Clean and readable code
-- Lessen redundancy using class templates
+- Lessens redundancy by using class templates
 - Define your own datatypes
 - Keyword aliasing for smaller file sizes
 - Helpful classes and datatypes built-in

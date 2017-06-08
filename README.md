@@ -1,9 +1,9 @@
 # declarejs
-The best way to create JavaScript classes.  It's syntax and features are similar to other robust languages like C# and Java. So, brings structure and control to your client-side code.
+The best way to create JavaScript classes.  Syntax and features similar to other robust languages like C# and Java. So, brings structure and control to your client-side code.
 
 - Private, protected, and static members
 - Abstract classes and singletons
-- Ideal for modular code with Requirejs
+- Ideal for modular code using Requirejs
 
 ### Other Features
 - Clean, readable syntax

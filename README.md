@@ -5,7 +5,7 @@ The best way to create JavaScript classes.  Syntax and features similar to other
 - Abstract classes and singletons
 - Ideal for modular code using Requirejs
 
-### Other Features
+### Benefits
 - Clean, readable syntax
 - Class templates to minimize redundancy
 - User-defined datatypes

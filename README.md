@@ -9,13 +9,13 @@ The best way to create JavaScript classes.  It brings structure and control to y
 
 ### Other features
 - Clean, readable syntax
-- Class templates for minimizing redundancy
+- Class templates for minimal redundancy
 - User-defined datatypes
 - Has shorthand option for faster coding
 - No references to "prototype"
 - No spaghetti code
 - No other files required to start
-- It's less than 8K!
+- Less than 8K!
 
 
 ## Sample

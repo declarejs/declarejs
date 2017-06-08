@@ -2,17 +2,16 @@
 Easily create JavaScript classes with protected members.  Provides structure and control to your client-side code.
 
 ## Features
-- Abstract and singleton class options
-- Private, protected and static member access
-- Configure for debugging and performance
-- Works with Requirejs etc.
+- Abstract classes and singletons with ease
+- Private, protected and static members
+- Configure for debugging or performance
+- Ideal for modular code using Requirejs
 
 and more...
-- Clean and readable code
-- Class templates help lessen redundancy
+- Clean, readable code
+- Class templates for less redundancy
 - Define your own datatypes
-- Keyword aliases for smaller file sizes
-- Helpful classes and datatypes built-in
+- Use shorthand keywords for smaller files
 - No more references to "prototype"
 - No more spaghetti code
 - It's less than 8K!

@@ -1,5 +1,5 @@
 # declarejs
-The best way to create JavaScript classes.  It's syntax and features are similar to other robust languages like C# and Java. So brings structure and control to your client-side code.
+The best way to create JavaScript classes.  It's syntax and features are similar to other robust languages like C# and Java. So, brings structure and control to your client-side code.
 
 - Private, protected, and static members
 - Abstract classes and singletons
@@ -19,7 +19,7 @@ The best way to create JavaScript classes.  It's syntax and features are similar
 
 ## Sample
 ```
-var declare = declarejs; // grab global
+var declare = declarejs; // global
 
 declare("abstract djs.Animal", function(keys, self){return {
 
@@ -37,7 +37,7 @@ declare("abstract djs.Animal", function(keys, self){return {
 		return this[keys.name];
 	},
 	
-	"und setName": function(value){
+	"void setName": function(value){
 		this[keys.name] = declare.cast(value, "string");
 	}
 	
@@ -64,7 +64,7 @@ declare("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog)
 		return this[keys.Dog];
 	},
 
-	"und setDog": function(Obj){
+	"void setDog": function(Obj){
 		this[keys.Dog] = declare.cast(value, cDog);
 	},
 
@@ -81,5 +81,5 @@ declare("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog)
 var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person"});
 var Joe = new classes.Person("Joe", "Rufus");
 
-alert(Joe.speak() + "<br/>Created " + classes.Animal.names.join(", "));
+alert(Joe.speak() + "<br/>Animals: " + classes.Animal.names.join(", "));
 ```

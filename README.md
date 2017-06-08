@@ -9,28 +9,20 @@ Easily create JavaScript classes with protected members.  Provides structure and
 
 and more...
 - Clean and readable code
-- Lessens redundancy by using class templates
+- Class templates help lessen redundancy
 - Define your own datatypes
-- Keyword aliasing for smaller file sizes
+- Keyword aliases for smaller file sizes
 - Helpful classes and datatypes built-in
-- No tedious references to "prototype"
-- Reduces spaghetti code
+- No more references to "prototype"
+- No more spaghetti code
 - It's less than 8K!
 
 ## Example
 ```
-<html><head><title>declarejs</title>
-
-<script type="text/javascript" src="declare.js"></script>
-<script type="text/javascript">
-
-var declare = declarejs;
-
-// --- classes --- //
+var declare = declarejs; // grab global
 
 declare("abstract djs.Animal", function(keys, self){return {
 
-	"protected scalar secret": "",
 	"protected string name": "",
 	"static Array names": [],
 
@@ -39,9 +31,13 @@ declare("abstract djs.Animal", function(keys, self){return {
 		if(this[keys.name]) self.names.push(this[keys.name]);
 	},
 
-	"getName": function(){return this.__get(keys.name);},
+	"getName": function(){
+		return this.__get(keys.name);
+	},
 	
-	"setName": function(value){this.__set(keys.name, value);},
+	"setName": function(value){
+		this.__set(keys.name, value);
+	},
 	
 	"abstract string speak": undefined
 	
@@ -49,7 +45,9 @@ declare("abstract djs.Animal", function(keys, self){return {
 
 declarejs("djs.Dog : djs.Animal", function(keys, self, parent){return {
 
-	"speak": function(){return "woof";}
+	"speak": function(){
+		return "woof";
+	}
 
 }});
 
@@ -62,9 +60,13 @@ declarejs("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDo
 		if(dog) this.setDog(new cDog(dog));
 	},
 
-	"getDog": function(){return this.Dog;},
+	"getDog": function(){
+		return this.Dog;
+	},
 
-	"setDog": function(Obj){this.__set(keys.Dog, Obj);},
+	"setDog": function(Obj){
+		this.__set(keys.Dog, Obj);
+	},
 
 	"string speak": function(){
 		var str = "My name is " + this.getName();
@@ -78,22 +80,17 @@ declarejs("singleton djs.Oprah : djs.Person", function(keys, self, parent){retur
 
 	"protected name": "Oprah",
 
-	"speak": function(){return "You get a car!";}
+	"speak": function(){
+		return "You get a car!";
+	}
 
 }});
 
-</script></head><body><script type="text/javascript">
-		
 // --- implement --- //
 
 var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person", Oprah: "djs.Oprah"}),
 	Joe = new classes.Person("Joe", "Rufus"),
-	Oprah = classes.Oprah(); // get singleton
+	Oprah = classes.Oprah(); // singleton
 
-html = "Joe: " + Joe.speak() + "<br/>";
-html += "Oprah: " + Oprah.speak() + "<br/>";
-html += "creations: " + classes.Animal.names.join(", ") + "<br/>";
-document.body.innerHTML = html;
-
-</script></body></html>
+alert("Joe: " + Joe.speak() + "<br/>Oprah: " + Oprah.speak() + "<br/>From: " + classes.Animal.names.join(", "));
 ```

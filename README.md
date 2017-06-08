@@ -32,11 +32,11 @@ declare("abstract djs.Animal", function(keys, self){return {
 	},
 
 	"getName": function(){
-		return this.__get(keys.name);
+		return this[keys.name];
 	},
 	
 	"setName": function(value){
-		this.__set(keys.name, value);
+		this[keys.name] = declare.cast(value, "string");
 	},
 	
 	"abstract string speak": undefined
@@ -53,7 +53,7 @@ declarejs("djs.Dog : djs.Animal", function(keys, self, parent){return {
 
 declarejs("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog){return {
 
-	"djs.Dog Dog": undefined,
+	"protected djs.Dog Dog": undefined,
 
 	"__construct": function(name, dog){
 		parent.__construct.call(this, name);
@@ -61,11 +61,11 @@ declarejs("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDo
 	},
 
 	"getDog": function(){
-		return this.Dog;
+		return this[keys.Dog];
 	},
 
 	"setDog": function(Obj){
-		this.__set(keys.Dog, Obj);
+		this[keys.Dog] = declare.cast(value, cDog);
 	},
 
 	"string speak": function(){
@@ -88,9 +88,9 @@ declarejs("singleton djs.Oprah : djs.Person", function(keys, self, parent){retur
 
 // --- implement --- //
 
-var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person", Oprah: "djs.Oprah"}),
-	Joe = new classes.Person("Joe", "Rufus"),
-	Oprah = classes.Oprah(); // singleton
+var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person", Oprah: "djs.Oprah"});
+var Joe = new classes.Person("Joe", "Rufus");
+var Oprah = classes.Oprah(); // singleton, use contructor as a function
 
 alert("Joe: " + Joe.speak() + "<br/>Oprah: " + Oprah.speak() + "<br/>From: " + classes.Animal.names.join(", "));
 ```

@@ -189,7 +189,7 @@ declarejs = (function(){
 	},
 
 	datatype = function(name, parent, mixed){
-		var enums, func; 
+		var enums, func;
 
 		// duplicate?
 		if(datatypes[name]) redeclareError(name);
@@ -358,10 +358,11 @@ declarejs = (function(){
 		// templatized class?
 		if(!struct.declared){
 
+
 			// parse name
 			var parts = name.split(">").shift().split("<");
 			if(parts.length < 2) missingError(name); // not a templatized class
-			else if(parts.length > 2) malformedError(name); // 
+			else if(parts.length > 2) malformedError(name); //
 
 			// settings
 			var tname = parts[0],
@@ -405,6 +406,9 @@ declarejs = (function(){
 			if(parent.singleton) struct.singleton = true;
 			if(parent.private && !struct.private) mismatchError("privateClass", struct.header);
 		}
+
+		// assemble includes
+		for(var i=0; i<struct.includedtypes.length; i++) assemble(struct.includedtypes[i]);
 
 		// call user-defined function
 		var newmembers = struct.func.apply({}, struct.includes) || {};
@@ -590,6 +594,7 @@ declarejs = (function(){
 
 		"remove": function(pos){
 			var attrs = this[keys.attrs];
+			if(pos < 0) pos = attrs.length + pos;
 			if(pos === 0) return attrs.shift();
 			if(pos === attrs.length-1) return attrs.pop();
 			if(attrs[pos] !== undefined) return attrs.splice(pos, 1).pop();
@@ -605,6 +610,20 @@ declarejs = (function(){
 			value = this.convert(value, 0);
 			if(value !== undefined) this[keys.attrs].unshift(value);
 			return this;
+		},
+
+		"parse": function(string, token){
+			return this.values(string.split(token));
+		},
+
+		"stringify": function(token){
+			return this[keys.attrs].join(token);
+		},
+
+		"toArray": function(){
+			var arr = [], attrs = this[keys.attrs];
+			for(var i=0; i<attrs.length; i++) arr.push(attrs[i]);
+			return arr;
 		}
 
 	}});

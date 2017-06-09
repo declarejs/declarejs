@@ -14,12 +14,13 @@ declarejs = (function(){
 	templates = {},
 	casters = {},
 	compiles = [], 	// compile queue
-	singles = {},	// singletons objects
+	singles = {},	// singleton objects
 
 	init = function(){
 
 		// create alias
-		var arr = ("string public protected private static final singleton abstract integer undefined boolean open make").split(" ");
+		var arr = ("string public protected private static final singleton abstract integer undefined boolean").split(" ");
+		aliases["void"] = "undefined"; // other alias
 		for(var i=0; i<arr.length; i++){
 			var str = arr[i].substr(0, 3);
 			aliases[str] = arr[i];
@@ -108,10 +109,10 @@ declarejs = (function(){
 		return classes[name] || window[name] || assemble(name).c;
 	},
 
-	check = function(name){
-		var struct = structs[name];
-		if(struct.checked) return struct;
-		// --- WIP
+	getClasses = function(obj){
+		var obj2 = {};
+		for(var item in obj) obj2[item] = get(obj[item]);
+		return obj2;
 	},
 	
 	obscure = function(name, access){
@@ -187,31 +188,53 @@ declarejs = (function(){
 		struct.members[name] = struct.members_new[name] = member;
 	},
 
-	datatype = function(name, parent, func){
-		if(userules) checkName(name);
+	datatype = function(name, parent, mixed){
+		var enums, func;
+
+		// duplicate?
 		if(datatypes[name]) redeclareError(name);
 		
 		// checks
-		if(userules){
+		if(debug && userules){
+			checkName(name);
 			if(typeof(parent) !== "string") error("needsParent", name);
 			if(name.toLowerCase() !== name) error("needsLowercase", name);
 		}
+
+		// enum?
+		switch(typeof(mixed)){
+			case "function": // function
+				func = mixed; 
+			break;
+			case "object": // enum
+				if(mixed instanceof Array){ // array
+					enums = {};
+					for(var i=0; i<mixed.length; i++) enums[i] = enums[mixed[i]] = enums[i+""] = i; // key variations: number, string, numeric-string
+				} else enums = mixed; // object
+				
+				// enum caster
+				func = function(value){
+					if(enums[value] !== undefined) return datatypes[parent].func(enums[value]);
+				}
+			break;
+			default: invalidError("param", name); // error
+		}
 		
-		datatypes[name] = {name: name, parent: parent, func: func};
-		//show("DATATYPE: " + name);
+		// add to datatypes
+		datatypes[name] = {name: name, parent: parent, func: func, enums: enums};
 		casters[name] = func;
 	},
 
 	checkName = function(name){
-		if(name.split(".").length < 2) missingPrefixError(name); // dot required and no spaces allowed
-		if(name.split(" ").length > 1) malformedError(name); // dot required and no spaces allowed
+		if(name.split(".").length < 2) violationError("naming", "must prefix " + name); // dot required and no spaces allowed
+		if(name.split(" ").length > 1) violationError("naming", name); // dot required and no spaces allowed
 	},
 
 	template = function(header, func){
 		var parts = header.split(">").shift().split("<"),
 			name = parts[0];
 
-		if(userules) checkName(name);
+		if(debug && userules) checkName(name);
 
 		// duplicate?
 		if(templates[name]) redeclareError(header);
@@ -244,7 +267,7 @@ declarejs = (function(){
 		if(structs[name]) return structs[name];
 
 		// the class
-		var c = function(){c.prototype.__realconstruct.apply(this, arguments);}
+		var c = function(){return c.prototype.__realconstruct.apply(this, arguments);}
 		c.prototype.__realconstruct = function(){missingError(name);}; // gets overridden after extending as parent (if applies)
 
 		// the struct
@@ -394,18 +417,19 @@ declarejs = (function(){
 		c.__parent = proto.__parent = parent ? parent.name : false;
 		if(!proto.__construct) proto.__construct = c.__construct = emptyFunc;
 
-		// add setter / getter
+		// add setter / getter / property
 		for(var item in keys) members_bykey[keys[item]] = struct.members[item];
-		if(debug){
-			proto.__get = function(key){return members_bykey[key] ? this[key] : missingError(name + "::" + key);}
+		proto.__prop = function(key){return members_bykey[key];}
+		proto.__get = function(key){return this[key];}
+		if(!debug) proto.__set = function(key, value){this[key] = cast(value, members_bykey[key].type);}
+		else {
 			proto.__set = function(key, value){
 				if(!members_bykey[key]) missingError(name + "::" + key);
 				this[key] = cast(value, members_bykey[key].type);
 			}
-		} else {
-			proto.__get = function(key){return this[key];}
-			proto.__set = function(key, value){this[key] = cast(value, members_bykey[key].type);}
 		}
+		
+
 
 
 		// non-abstract constructors (see declare for abstract constructor)
@@ -415,13 +439,14 @@ declarejs = (function(){
 			else {
 				// singleton...
 				proto.__realconstruct = function(){
-					if(singles[name]) error("multiSingletons", name);
+					// as function call
+					if(!this.__class) return singles[name] || makeWith(name, arguments);
+
+					// as instance creation
+					if(singles[name]) violationError("singleton", name);
 					singles[name] = this;
 					this.__construct.apply(this, arguments);
-				}
-				c.single = function(){
-					return singles[name] || makeWith(name, arguments);
-				}
+				};
 			}
 		}
 
@@ -449,15 +474,19 @@ declarejs = (function(){
 	},
 
 	redeclareError = function(header){
-		error("redeclared", header);
+		violationError("naming", "duplicate: " + header);
 	},
 
-	mismatchError = function(name, desc){
-		error(name + "Mismatch", desc);
+	violationError = function(prefix, desc){
+		error(prefix + "Violation", desc);
 	},
 
-	invalidError = function(name, desc){
-		error(name + "Invalid", desc);
+	mismatchError = function(prefix, desc){
+		error(prefix + "Mismatch", desc);
+	},
+
+	invalidError = function(prefix, desc){
+		error(prefix + "Invalid", desc);
 	},
 
 	end = 0;
@@ -686,10 +715,13 @@ declarejs = (function(){
 	declare.make = make;
 	declare.makeWith = makeWith;
 	declare.compile = compile;
+	declare.classes = getClasses;
+	declare.config = config;
 	if(debug) declare.inspect = inspect; // internal use only
 	return declare;
 
 })();
 
-// require js
-if(window["define"]) window["define"]([], declarejs);
+
+// requirejs module?
+if(window["define"]) define([], function(){return declarejs;});

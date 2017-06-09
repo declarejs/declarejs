@@ -1,36 +1,28 @@
 # declarejs
-Easily create JavaScript classes with protected members.  Provides structure and control to your client-side code.
+The best way to create JavaScript classes.  Syntax and features similar to other robust languages like C# and Java. So, bring structure and control to your client-side code.
 
-## Features
-- Abstract and singleton class options
-- Private, protected and static member access
-- Configure for debugging and performance
-- Works with Requirejs etc.
+- Private, protected, and static members
+- Abstract classes and singletons
+- Ideal for modular code using Requirejs
 
-and more...
-- Clean and readable code
-- Lessen redundancy using class templates
-- Define your own datatypes
-- Keyword aliasing for smaller file sizes
-- Helpful classes and datatypes built-in
-- No tedious references to "prototype"
-- Reduces spaghetti code
-- It's less than 8K!
+### Benefits
+- Clean, readable syntax
+- Class templates to minimize redundancy
+- User-defined datatypes
+- Has shorthand option for faster coding
+- Configurable for debugging and performance
+- No references to "prototype"
+- No spaghetti code
+- No other files required to start
+- Less than 8K!
 
-## Example
+
+## Sample
 ```
-<html><head><title>declarejs</title>
-
-<script type="text/javascript" src="../../declare.js"></script>
-<script type="text/javascript">
-
-var declare = declarejs;
-
-// --- classes --- //
+var declare = declarejs; // global
 
 declare("abstract djs.Animal", function(keys, self){return {
 
-	"protected scalar secret": "",
 	"protected string name": "",
 	"static Array names": [],
 
@@ -38,35 +30,45 @@ declare("abstract djs.Animal", function(keys, self){return {
 		if(name) this.setName(name);
 		if(this[keys.name]) self.names.push(this[keys.name]);
 	},
+	
+	"abstract string speak": undefined,
 
-	"getName": function(){return this.__get(keys.name);},
+	"string getName": function(){
+		return this[keys.name];
+	},
 	
-	"setName": function(value){this.__set(keys.name, value);},
-	
-	"abstract string speak": undefined
+	"void setName": function(value){
+		this[keys.name] = declare.cast(value, "string");
+	}
 	
 }});
 
-declarejs("djs.Dog : djs.Animal", function(keys, self, parent){return {
+declare("djs.Dog : djs.Animal", function(keys, self, parent){return {
 
-	"speak": function(){return "woof";}
+	"speak": function(){
+		return "woof";
+	}
 
 }});
 
-declarejs("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog){return {
+declare("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog){return {
 
-	"djs.Dog Dog": undefined,
+	"protected djs.Dog Dog": undefined,
 
 	"__construct": function(name, dog){
 		parent.__construct.call(this, name);
 		if(dog) this.setDog(new cDog(dog));
 	},
 
-	"getDog": function(){return this.Dog;},
+	"djs.Dog getDog": function(){
+		return this[keys.Dog];
+	},
 
-	"setDog": function(Obj){this.__set(keys.Dog, Obj);},
+	"void setDog": function(Obj){
+		this[keys.Dog] = declare.cast(value, cDog);
+	},
 
-	"string speak": function(){
+	"speak": function(){
 		var str = "My name is " + this.getName();
 		if(this.Dog) str += " and my dog " + this.Dog.getName() + "... " + this.Dog.speak();
 		return str;
@@ -74,26 +76,10 @@ declarejs("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDo
 
 }});
 
-declarejs("singleton djs.Oprah : djs.Person", function(keys, self, parent){return {
-
-	"protected name": "Oprah",
-
-	"speak": function(){return "You get a car!";}
-
-}});
-
-</script></head><body><script type="text/javascript">
-		
 // --- implement --- //
 
-var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person", Oprah: "djs.Oprah"}),
-	Joe = new classes.Person("Joe", "Rufus"),
-	Oprah = classes.Oprah(); // get singleton
+var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person"});
+var Joe = new classes.Person("Joe", "Rufus");
 
-html = "Joe: " + Joe.speak() + "<br/>";
-html += "Oprah: " + Oprah.speak() + "<br/>";
-html += "creations: " + classes.Animal.names.join(", ") + "<br/>";
-document.body.innerHTML = html;
-
-</script></body></html>
+alert(Joe.speak() + "<br/>Animals: " + classes.Animal.names.join(", "));
 ```

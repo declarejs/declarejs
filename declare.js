@@ -189,7 +189,7 @@ declarejs = (function(){
 	},
 
 	datatype = function(name, parent, mixed){
-		var enums, func;
+		var enums, func; 
 
 		// duplicate?
 		if(datatypes[name]) redeclareError(name);

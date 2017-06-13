@@ -1,7 +1,7 @@
 
 declarejs = (function(){
 
-	var version = '2.0.0',
+	var version = '2.0.7',
 	debug = true,
 	inspecting = false,
 	userules = false, // no rules for internal (see bottom)
@@ -16,11 +16,37 @@ declarejs = (function(){
 	compiles = [], 	// compile queue
 	singles = {},	// singleton objects
 
+	// constants - these are set in init() for max minification
+	C_PUBLIC, C_PROTECTED, C_PRIVATE, C_STATIC, C_FINAL, C_SINGLETON, C_ABSTRACT, C_MIXED, C_SCALAR, C_STRING, C_INTEGER, C_UNDEFINED, C_BOOLEAN, C_FUNCTION, C_OBJECT, C_NUMBER, C_TYPE, C_CLASS, C_THIS,
+
+	// --- init --- //
+
 	init = function(){
 
+		// set constants - NOTE: only used in functions that get called in debug mode or before compiling (for max runtime performance)
+		C_PUBLIC = "public";
+		C_PROTECTED = "protected";
+		C_PRIVATE = "private";
+		C_STATIC = "static";
+		C_FINAL = "final";
+		C_SINGLETON = "singleton";
+		C_ABSTRACT = "abstract";
+		C_MIXED = "mixed";
+		C_SCALAR = "scalar";
+		C_STRING = "string";
+		C_INTEGER = "integer";
+		C_UNDEFINED = "undefined";
+		C_BOOLEAN = "boolean";
+		C_FUNCTION = "function";
+		C_OBJECT = "object";
+		C_NUMBER = "number";
+		C_TYPE = "type";
+		C_CLASS = "class";
+		C_THIS = "this";
+
 		// create alias
-		var arr = ("string public protected private static final singleton abstract integer undefined boolean").split(" ");
-		aliases["void"] = "undefined"; // other alias
+		var arr = [C_PUBLIC, C_PROTECTED, C_PRIVATE, C_STATIC, C_FINAL, C_SINGLETON, C_ABSTRACT, C_MIXED, C_SCALAR, C_STRING, C_NUMBER, C_INTEGER, C_UNDEFINED, C_BOOLEAN, C_FUNCTION, C_OBJECT, C_TYPE, C_CLASS, C_THIS];
+		aliases["void"] = C_UNDEFINED; // other alias
 		for(var i=0; i<arr.length; i++){
 			var str = arr[i].substr(0, 3);
 			aliases[str] = arr[i];
@@ -28,17 +54,17 @@ declarejs = (function(){
 
 	},
 
+	// --- functions --- //
+	
 	config = function(name, value){
-		if(value === undefined) return configs[name];
-
-		switch(name){
-			case 'debug': debug = !!debug; break;
-			case 'userules': userules = !!userules; break;
-			default:
-				if(typeof(name) === "object"){
-					for(var item in name) config(item, name[item]);
-				}
-			break;
+		if(value === undefined){
+			if(name === "debug") return debug;
+			if(typeof(name) === C_OBJECT){
+				for(var item in name) config(item, name[item]);
+			}
+		} else if(name === "debug"){
+			debug = !!value; 
+			if(debug) console.log("declarejs: " + version);
 		}
 	},
 
@@ -50,7 +76,7 @@ declarejs = (function(){
 
 	abstractMethod = function(classname, name){
 		return function(){
-			error("abstractMethod", classname + "::" + name + "()");
+			error(C_ABSTRACT + "Method", classname + "::" + name + "()");
 		}
 	},
 
@@ -66,7 +92,7 @@ declarejs = (function(){
 
 	cast = function(value, type){
 		if(casters[type]) return casters[type](value); // declared datatype?
-		if(typeof(type) === "function") return (value instanceof type) ? value : undefined; // class function?
+		if(typeof(type) === C_FUNCTION) return (value instanceof type) ? value : undefined; // class function?
 		if(window[type]){ // native class?
 			casters[type] = function(value){if(value instanceof window[type]) return value;} // cache it
 			return (value instanceof window[type]) ? value : undefined;
@@ -132,23 +158,28 @@ declarejs = (function(){
 			name: name,
 			key: name,
 			header: header,
-			access: "public",
+			access: C_PUBLIC,
 			type: false,
-			ismethod: (rawtype === "function")
+			thistype: false,
+			ismethod: (rawtype === C_FUNCTION)
 		}
 
 		// parse header
 		for(var i=0; i<parts.length; i++){
 			var part = aliases[parts[i]] || parts[i];
 			switch(part){
-				case "static": member[part] = true; break;
-				case "protected": case "private": case "public": member.access = part; break;
-				case "abstract": 
-					rawtype = "function";
+				case C_STATIC: member[part] = true; break;
+				case C_PROTECTED: case C_PRIVATE: case C_PUBLIC: member.access = part; break;
+				case C_ABSTRACT: 
+					rawtype = C_FUNCTION;
 					member.ismethod = true;
 					member[part] = true;
-					if(pmember[part] === undefined) data = abstractMethod(struct.name, name); 
+					if(debug && pmember && pmember[part] === undefined) data = abstractMethod(struct.name, name); 
 				break; 
+				case C_THIS: 
+					member.thistype = true;
+					member.type = struct.name; 
+				break;
 				case "all": // START accessors
 				case "get": 
 					if(!members["get_"+name]) addMember("get_"+name, function(){return this[member.key];}, struct); 
@@ -164,24 +195,35 @@ declarejs = (function(){
 
 		// parent member?
 		if(pmember){
-			// check with parent member...
+
+			// use parent member key
 			member.key = pmember.key;
-			if(member.access !== pmember.access) mismatchError("access", header);
-			if(pmember.access === "private") error("privateMember", header);
-			if(pmember.final) error("finalMember", header);
-			if((member.ismethod && !pmember.ismethod) || (!member.ismethod && pmember.ismethod)) mismatchError("type", header);
-			if((member.static && !pmember.static) || (!member.static && pmember.static)) mismatchError("static", header);
-			if(member.type) {} // --- WIP: check compatability here
-			else member.type = pmember.type;
+
+			// check with parent
+			if(debug){
+				if(member.access !== pmember.access) mismatchError("access", header);
+				if(pmember.access === C_PRIVATE) error(C_PRIVATE + "Member", header);
+				if(pmember[C_FINAL]) error(C_FINAL + "Member", header);
+				if((member.ismethod && !pmember.ismethod) || (!member.ismethod && pmember.ismethod)) mismatchError(C_TYPE, header);
+				if((member[C_STATIC] && !pmember[C_STATIC]) || (!member[C_STATIC] && pmember[C_STATIC])) mismatchError(C_STATIC, header);
+				// --- WIP: check type compatability
+			}
+
+			// member type
+			if(pmember.thistype){
+				member.type = struct.name;
+				member.thistype = true;
+			} else if(!member.type) member.type = pmember.type;
 		} else {
 			// no parent member...
-			if(member.access !== "public") member.key = pmember ? pmember.key : obscure(name, member.access);
-			if(!member.type) member.type = member.ismethod ? "data" : rawtype;
-			struct.keys[name] = member.key;
+
+			if(!member.type) member.type = member.ismethod ? C_MIXED : rawtype;
+			if(member.access !== C_PUBLIC) member.key = pmember ? pmember.key : obscure(name, member.access); // generate new key
+			struct.keys[name] = member.key; // append keys (keep after generate key)
 		}
 
 		// attach member
-		if(member.static) c[member.key] = data;
+		if(member[C_STATIC]) c[member.key] = data;
 		else c[member.key] = c.prototype[member.key] = data;
 
 		// append struct members
@@ -197,16 +239,16 @@ declarejs = (function(){
 		// checks
 		if(debug && userules){
 			checkName(name);
-			if(typeof(parent) !== "string") error("needsParent", name);
+			if(typeof(parent) !== C_STRING) error("needsParent", name);
 			if(name.toLowerCase() !== name) error("needsLowercase", name);
 		}
 
 		// enum?
 		switch(typeof(mixed)){
-			case "function": // function
+			case C_FUNCTION: // function
 				func = mixed; 
 			break;
-			case "object": // enum
+			case C_OBJECT: // enum
 				if(mixed instanceof Array){ // array
 					enums = {};
 					for(var i=0; i<mixed.length; i++) enums[i] = enums[mixed[i]] = enums[i+""] = i; // key variations: number, string, numeric-string
@@ -231,8 +273,13 @@ declarejs = (function(){
 	},
 
 	template = function(header, func){
+
+		// settings
 		var parts = header.split(">").shift().split("<"),
 			name = parts[0];
+
+		// no spaces
+		header = header.split(" ").join("");
 
 		if(debug && userules) checkName(name);
 
@@ -245,7 +292,7 @@ declarejs = (function(){
 
 	castParam = function(value, type, name){
 		switch(type){
-			case "string": if(value !== "") return value; break;
+			case "string": case "type": if(value !== "") return value; break; // WIP: need logic for type somewhere else
 			case "boolean": return (value && value !== "" && value !== null) ? true : false;
 			case "integer": 
 				value = parseInt(value);
@@ -256,7 +303,7 @@ declarejs = (function(){
 				if(!isNaN(value)) return value;
 			break;
 		}
-		invalidError("parameter", name);
+		invalidError("templateParam", type);
 	},
 
 	loadInclude = function(name){
@@ -303,11 +350,11 @@ declarejs = (function(){
 		for(var i=0; i<parts2.length; i++){
 			var part = aliases[parts2[i]] || parts2[i];
 			switch(part){
-				case "abstract": case "singleton": struct[part] = true; break;
-				case "private":
+				case C_ABSTRACT: case C_SINGLETON: struct[part] = true; break;
+				case C_PRIVATE:
 					struct[part] = true;
 					delete structs[name]; // do before obscuring
-					name = struct.name = obscure(name, "private");
+					name = struct.name = obscure(name, C_PRIVATE);
 					structs[name] = struct; // see loadStruct
 					compiles.pop(); // see loadStruct
 					compiles.push(name);
@@ -335,8 +382,8 @@ declarejs = (function(){
 		}
 
 		// constructor
-		if(struct.abstract){
-			c.prototype.__realconstruct = function(){error("abstractInstance", name);}
+		if(struct[C_ABSTRACT]){
+			c.prototype.__realconstruct = function(){error(C_ABSTRACT + "Instance", name);}
 		} else {
 			// auto-assemble here, overridden in the assemble function
 			c.prototype.__realconstruct = function(){assemble(name); this.__construct.apply(this, arguments);}
@@ -403,8 +450,8 @@ declarejs = (function(){
 			for(var item in parent.keys) struct.keys[item] = parent.keys[item];
 
 			// singleton?
-			if(parent.singleton) struct.singleton = true;
-			if(parent.private && !struct.private) mismatchError("privateClass", struct.header);
+			if(parent[C_SINGLETON]) struct[C_SINGLETON] = true;
+			if(parent[C_PRIVATE] && !struct[C_PRIVATE]) mismatchError(C_PRIVATE + "Class", struct.header);
 		}
 
 		// assemble includes
@@ -416,30 +463,20 @@ declarejs = (function(){
 		// add new members
 		for(var item in newmembers) addMember(item, newmembers[item], struct);
 
-		// add class / parent
-		c.__class = proto.__class = name;
-		c.__parent = proto.__parent = parent ? parent.name : false;
-		if(!proto.__construct) proto.__construct = c.__construct = emptyFunc;
-
-		// add setter / getter / property
+		// add built-in members
+		if(!proto.__construct) proto.__construct = c.__construct = emptyFunc; // construct
+		c.__class = proto.__class = name; // class
+		c.__parent = proto.__parent = parent ? parent.name : false; // parent
 		for(var item in keys) members_bykey[keys[item]] = struct.members[item];
-		proto.__prop = function(key){return members_bykey[key];}
-		proto.__get = function(key){return this[key];}
-		if(!debug) proto.__set = function(key, value){this[key] = cast(value, members_bykey[key].type);}
-		else {
-			proto.__set = function(key, value){
-				if(!members_bykey[key]) missingError(name + "::" + key);
-				this[key] = cast(value, members_bykey[key].type);
-			}
-		}
+		c.__member = proto.__member = function(key){return members_bykey[key];} // member
 		
 
 
 
 		// non-abstract constructors (see declare for abstract constructor)
-		if(!struct.abstract){
+		if(!struct[C_ABSTRACT]){
 			// standard and singletons
-			if(!struct.singleton) proto.__realconstruct = proto.__construct; 
+			if(!struct[C_SINGLETON]) proto.__realconstruct = proto.__construct; 
 			else {
 				// singleton...
 				proto.__realconstruct = function(){
@@ -447,7 +484,7 @@ declarejs = (function(){
 					if(!this.__class) return singles[name] || makeWith(name, arguments);
 
 					// as instance creation
-					if(singles[name]) violationError("singleton", name);
+					if(singles[name]) violationError(C_SINGLETON, name);
 					singles[name] = this;
 					this.__construct.apply(this, arguments);
 				};
@@ -496,17 +533,108 @@ declarejs = (function(){
 	end = 0;
 
 
+	// initialize the module
+	init();
+
 
 	// --- classes --- //
-	
-	declare("Map<data>", function(keys, self, parent){return {
 
-		"protected attrs": undefined,
-		"protected type": "data",
+	declare("abs Base", function(keys, self, parent){return {
+
+		// access
+
+		"boo has": function(name){
+			return this["get_" + name] ? !!this["get_" + name]() : false;
+		},
+
+		"Base set": function(name, value){
+			this["set_" + name](value);
+			return this;
+		},
+
+		"mix get": function(name){
+			return this["get_" + name]();
+		},
+
+		// casts
+
+		"mix to": function(type){
+			var func = this["to_" + type];
+			if(func) return func();
+			if(casters[type]) return casters[type](this); // declared datatype?
+		},
+
+		"obj to_mixed": function(type){
+			return this;
+		},
+
+		"obj to_object": function(type){
+			obj = {};
+			for(var item in this){
+				if(item.substr(0, 3) === "get_") obj[item.substr(4, 100)] = this[item]();
+			}
+			return obj;
+		}
+
+	}});
+
+	declare("abs Model : Base", function(keys, self, parent){return {
+
+		"__construct": function(mixed){
+			if(mixed !== undefined) this.set_values(mixed);
+		},
+
+		"mix values": function(obj){
+			if(!obj) return this.to_object();
+			for(var item in obj) this.set(item, obj[item]);
+			return this;
+		},
+
+		"thi each": function(func){
+			for(var item in this){
+				if(this.has(item)) func(item, this.get(item));
+			}
+			return this;
+		}
+
+	}});
+
+	declare("Data : Model", function(keys, self, parent){return {
+
+		"pro get typ type": C_MIXED, // use auto-get
+		"pro get mix data": undefined, // use auto-get
+
+		"__construct": function(mixed){
+			parent.__construct.call(this);
+			this.set_data(mixed);
+		},
+
+		"mix make_data": emptyFunc,
+
+		"und set_data": function(value){
+			if(value === undefined) this[keys.data] = this.make_data();
+			else {
+				var value2 = cast(value, this[keys.type]);
+				this[keys.data] = (value2 === undefined) ? this.make_data(value) : value2;
+			}
+			return this;
+		}
+	}});
+
+	declare("Map : Data", function(keys, self, parent){return {
+
 
 		"__construct": function(obj){
-			this[keys.attrs] = {};
+			parent.__construct.call(this);
 			if(obj) this.values(obj);
+		},
+
+		"make_data": function(){
+			return {};
+		},
+
+		"get_data": function(){
+			return this.values();
 		},
 
 		"convert": function(value, key){
@@ -514,21 +642,21 @@ declarejs = (function(){
 		},
 
 		"each": function(func){
-			var attrs = this[keys.attrs];
-			for(var item in attrs) func(item, attrs[item]);
+			var data = this[keys.data];
+			for(var item in data) func(item, data[item]);
 			return this;
 		},
 
 		"remove": function(name){
-			var attrs = this[keys.attrs],
-				value = attrs[name];
-			delete attrs[name];
+			var data = this[keys.data],
+				value = data[name];
+			delete data[name];
 			return value;
 		},
 
 		"count": function(){
 			var c = 0;
-			for(var item in this[keys.attrs]) c++;
+			for(var item in this[keys.data]) c++;
 			return c;
 		},
 
@@ -537,39 +665,44 @@ declarejs = (function(){
 				for(var item in obj) this.set(item, obj[item]);
 				return this;
 			}
-			var attrs = this[keys.attrs];
+			var data = this[keys.data];
 			obj = {};
-			for(var item in attrs) obj[item] = attrs[item];
+			for(var item in data) obj[item] = data[item];
 			return obj;
 		},
 
 		"set": function(name, value){
 			value = this.convert(value);
-			if(value !== undefined) this[keys.attrs][name] = value;
+			if(value !== undefined) this[keys.data][name] = value;
 			return this;
 		},
 
 		"get": function(name, _else){
-			return this[keys.attrs][name] || _else;
+			return this[keys.data][name] || _else;
+		},
+
+		// cast
+
+		"str to_string": function(){
+			return JSON.stringify(this[keys.data]);
 		}
 
 	}});
 
-	declare("List<data> : Map<data>", function(keys, self, parent){ return {
+	declare("List : Map", function(keys, self, parent){ return {
 
-		"__construct": function(arr){
-			this[keys.attrs] = [];
-			if(arr) this.values(arr);
+		"make_data": function(){
+			return [];
 		},
 
 		"each": function(func){
-			var attrs = this[keys.attrs];
-			for(var i=0; i<attrs.length; i++) func(i, attrs[i]);
+			var data = this[keys.data];
+			for(var i=0; i<data.length; i++) func(i, data[i]);
 			return this;
 		},
 
 		"count": function(){
-			return this[keys.attrs].length;
+			return this[keys.data].length;
 		},
 
 		"values": function(arr){
@@ -577,38 +710,38 @@ declarejs = (function(){
 				for(var i=0; i<arr.length; i++) this.set(i, arr[i]);
 				return this;
 			}
-			var attrs = this[keys.attrs];
+			var data = this[keys.data];
 			arr = [];
-			for(var i=0; i<attrs.length; i++) arr.push(attrs[i]);
+			for(var i=0; i<data.length; i++) arr.push(data[i]);
 			return arr;
 		},
 
 		"set": function(pos, value){
 			value = this.convert(value);
 			if(value === undefined) return this;
-			if(pos < 0) pos = this[keys.attrs].length + pos;
-			else if(pos === (attrs.length-1)) return attrs.push(value);
-			else if(attrs[pos] !== undefined) return attrs[pos] = value;
+			if(pos < 0) pos = this[keys.data].length + pos;
+			else if(pos === (data.length-1)) return data.push(value);
+			else if(data[pos] !== undefined) return data[pos] = value;
 			return this;
 		},
 
 		"remove": function(pos){
-			var attrs = this[keys.attrs];
-			if(pos < 0) pos = attrs.length + pos;
-			if(pos === 0) return attrs.shift();
-			if(pos === attrs.length-1) return attrs.pop();
-			if(attrs[pos] !== undefined) return attrs.splice(pos, 1).pop();
+			var data = this[keys.data];
+			if(pos < 0) pos = data.length + pos;
+			if(pos === 0) return data.shift();
+			if(pos === data.length-1) return data.pop();
+			if(data[pos] !== undefined) return data.splice(pos, 1).pop();
 		},
 
 		"append": function(value){
-			value = this.convert(value, this[keys.attrs].length);
-			if(value !== undefined) this[keys.attrs].push(value);
+			value = this.convert(value, this[keys.data].length);
+			if(value !== undefined) this[keys.data].push(value);
 			return this;
 		},
 
 		"prepend": function(value){
 			value = this.convert(value, 0);
-			if(value !== undefined) this[keys.attrs].unshift(value);
+			if(value !== undefined) this[keys.data].unshift(value);
 			return this;
 		},
 
@@ -617,76 +750,76 @@ declarejs = (function(){
 		},
 
 		"stringify": function(token){
-			return this[keys.attrs].join(token);
+			return this[keys.data].join(token);
 		},
 
-		"toArray": function(){
-			var arr = [], attrs = this[keys.attrs];
-			for(var i=0; i<attrs.length; i++) arr.push(attrs[i]);
+		// casts
+
+		"obj to_Array": function(){
+			var arr = [], 
+				data = this[keys.data];
+			for(var i=0; i<data.length; i++) arr.push(data[i]);
 			return arr;
 		}
 
 	}});
 	
-	// init
-	init();
 
 
 	// --- datatype --- //
 
-	datatype("data", false, function(value){
+	datatype(C_MIXED, false, function(value){
 		return value;
 	}),
 
-	datatype("scalar", "data", function(value){
+	datatype(C_SCALAR, C_MIXED, function(value){
 		if(scalars[typeof(value)]) return value;
 	}, ""),
 
-	datatype("string", "scalar", function(value){
+	datatype(C_STRING, C_SCALAR, function(value){
 		value = cast(value, "scalar");
 		if(value) return value;
 	}, ""),
 
-	datatype("number", "scalar", function(value){
+	datatype(C_NUMBER, C_SCALAR, function(value){
 		if(!isNaN(value)) return value;
 		value = parseFloat(value);
 		if(!isNaN(value)) return value;
 	}, 0),
 
-	datatype("integer", "number", function(value){
+	datatype(C_INTEGER, C_NUMBER, function(value){
 		value = parseInt(value);
-		//debugger;
 		if(!isNaN(value)) return value;
 	}),
 
-	datatype("boolean", "scalar", function(value){
+	datatype(C_BOOLEAN, C_SCALAR, function(value){
 		if(value === true || value === false) return value;
 		return (!value || value === "" || value === null) ? false : true;
 	}, false),
 
-	datatype("object", "data", function(value){
+	datatype(C_OBJECT, C_MIXED, function(value){
 		if(typeof(value) === "object") return value;
 	}),
 
-	datatype("function", "data", function(value){
+	datatype(C_FUNCTION, C_MIXED, function(value){
 		if(typeof(value) === "function") return value;
 	}),
 
-	datatype("class", "function", function(value){
+	datatype(C_CLASS, C_FUNCTION, function(value){
 		if(typeof(value) === "function" && value.__class) return value;
 	}),
 
-	datatype("type", "string", function(value){
+	datatype(C_TYPE, C_STRING, function(value){
 		value = cast(value, "string");
 		if(value && casters[value]) return value;
 	}),
 
-	datatype("datatype", "type", function(value){
+	datatype(C_MIXED + C_TYPE, C_TYPE, function(value){
 		value = cast(value, "string");
 		if(value && datatypes[value]) return value;
 	}),
 
-	datatype("classtype", "type", function(value){
+	datatype(C_CLASS + C_TYPE, C_TYPE, function(value){
 		value = cast(value, "string");
 		if(value && classes[value]) return value;
 	}),
@@ -694,32 +827,41 @@ declarejs = (function(){
 
 	// --- templates --- //
 	
-	template("Map<string>", function(classname, type){
+	template("Map<type>", function(classname, type){
 
-		declare(classname + " : Map<data>", function(keys, self){ return {
+		declare(classname + " : Map", function(keys, self){ return {
 
-			"protected type": type,
-
-		}});
-
-	});
-
-	template("List<string>", function(classname, type){
-
-		declare(classname + " : List<data>", function(keys, self){ return {
-
-			"protected type": type,
+			"pro type": type,
 
 		}});
 
 	});
 
+	template("List<type>", function(classname, type){
+
+		declare(classname + " : List", function(keys, self){ return {
+
+			"pro type": type,
+
+		}});
+
+	});
+
+	template("Data<type>", function(classname, type){
+
+		declare(classname + " : Data", function(keys, self){return {
+
+			"pro type": type
+
+		}});
+
+	});
 
 
 	// --- internal --- //
 
-	compile();
-	userules = true;
+	compile(); // compile built-in types
+	userules = true; // turn on naming rules now
 	if(inspecting) debugger;
 	
 

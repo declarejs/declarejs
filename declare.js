@@ -1,7 +1,7 @@
 
 declarejs = (function(){
 
-	var version = '2.0.7',
+	var version = '2.0.8',
 	debug = true,
 	inspecting = false,
 	userules = false, // no rules for internal (see bottom)
@@ -12,9 +12,13 @@ declarejs = (function(){
 	classes = {}, 	// assembled classes
 	datatypes = {},
 	templates = {},
+	routines = {},	
 	casters = {},
-	compiles = [], 	// compile queue
-	singles = {},	// singleton objects
+	makers = {},
+	parents = {}, 		// name => parent name (for datatypes and classes)
+	parentclasses = {}, // classname => parent class (for performance)
+	compiles = [], 		// compile queue
+	singles = {},		// singleton objects
 
 	// constants - these are set in init() for max minification
 	C_PUBLIC, C_PROTECTED, C_PRIVATE, C_STATIC, C_FINAL, C_SINGLETON, C_ABSTRACT, C_MIXED, C_SCALAR, C_STRING, C_INTEGER, C_UNDEFINED, C_BOOLEAN, C_FUNCTION, C_OBJECT, C_NUMBER, C_TYPE, C_CLASS,
@@ -73,8 +77,7 @@ declarejs = (function(){
 
 	emptyFunc = function(){},
 
-/*
-	load = function(Obj, name){ // will fill if empty
+	load = function(Obj, name){ // fill property if empty
 		var value;
 		for(var i=1; i<arguments.length; i++){
 			name = arguments[i];
@@ -83,10 +86,10 @@ declarejs = (function(){
 		}
 	},
 
-	fill = function(Obj, name){ // will fill no matter what
+	fill = function(Obj, name){ // fill property no matter what
 		for(var i=1; i<arguments.length; i++) Obj.set(arguments[i], Obj["make_" + arguments[i]]());
 	},
-	*/
+	
 	abstractMethod = function(classname, name){
 		return function(){
 			error(C_ABSTRACT + "Method", classname + "::" + name + "()");
@@ -116,25 +119,15 @@ declarejs = (function(){
 	valid = function(value, type, strict){
 		return strict ? (value === cast(value, type)) : (value == cast(value, type));
 	},
-	/*
-	generate = function(type, create){
-		var datatype = datatypes[type];
-		if(!datatype) return create ? make(type) : undefined;
-		if(datatype.hasvalue) return datatype.value;
-		datatype.hasvalue = true;
-		return datatype.value = generate(datatype.parent);
-	},
-	*/
+
 	make = function(type){
-		var datatype = datatypes[type];
-		if(!datatype) return makeWith(type, arguments);
-		if(datatype.hasvalue) return datatype.value;
-		datatype.hasvalue = true;
-		return datatype.value = make(datatype.parent);
+		if(makers[type]) return makers[type](type, arguments);
+		missingError(type);
 	},
 
-	makeWith = function(name, a){
+	makeClass = function(name, a){ // not public, added to makers
 		var c = get(name);
+		if(!a) return new c();
 		switch(a.length){
 			case 0: return new c();
 			case 1: return new c(a[1]);
@@ -143,6 +136,13 @@ declarejs = (function(){
 			case 4: return new c(a[1], a[2], a[3], a[4]);
 			default: return new c(a[1], a[2], a[3], a[4], a[5]);
 		}
+	},
+
+	makeDatatype = function(type){ // not public, added to makers
+		var datatype = datatypes[type];
+		if(datatype.hasvalue) return datatype.value;
+		datatype.hasvalue = true;
+		return datatype.value = makeDatatype(datatype.parent);
 	},
 
 	compile = function(){
@@ -170,6 +170,10 @@ declarejs = (function(){
 		return debug ? (name + "(" + access.toUpperCase() + ")") : Math.round(Math.random()*100000000).toString(36);
 	},
 
+	member = function(Obj, key){
+		return Obj.__member(key);
+	},
+
 	attribute = function(Obj, name){ // set and get without errors
 		if(arguments.length === 1) return Obj["get_" + name] ? Obj["get_" + name]() : undefined;
 		if(Obj["set_" + name]) Obj["set_" + name](arguments[1]);
@@ -182,6 +186,18 @@ declarejs = (function(){
 			if(Obj["set_" + item]) Obj["set_" + item](values[item]);
 		}
 		return Obj;
+	},
+
+	className = function(mixed){
+		return mixed.__class;
+	},
+
+	parentName = function(mixed){
+		return parents[mixed] || parents[mixed.__class];
+	},
+
+	parentClass = function(mixed){
+		return parentclasses[mixed] || parentclasses[mixed.__class];
 	},
 
 	addMember = function(header, data, struct){
@@ -202,7 +218,6 @@ declarejs = (function(){
 			thistype: false,
 			ismethod: (rawtype === C_FUNCTION)
 		}
-		//if(header === "pro sgm djs.ui.element element")debugger;
 
 		// parse header
 		for(var i=0; i<parts.length; i++){
@@ -330,14 +345,20 @@ declarejs = (function(){
 			default: invalidError("param", name); // error
 		}
 		
-		// add to datatypes
+		// append globals
 		datatypes[name] = {name: name, parent: parent, func: func, enums: enums, value: value, hasvalue: (value !== undefined)};
 		casters[name] = func;
+		parents[name] = parent;
+		makers[name] = makeDatatype;
 	},
 
 	checkName = function(name){
 		if(name.split(".").length < 2) violationError("naming", "must prefix " + name); // dot required and no spaces allowed
 		if(name.split(" ").length > 1) violationError("naming", name); // dot required and no spaces allowed
+	},
+
+	routine = function(header, func){
+		//template(header, func, true);
 	},
 
 	template = function(header, func){
@@ -356,6 +377,30 @@ declarejs = (function(){
 
 		// append global templates
 		templates[name] = {name: name, params: parts[1].split(","), func: func};
+	},
+
+	templateParent = function(name, type){
+		var parent = parentName(type);
+		return parent ? name + "<" + parent + ">" : name;
+	},
+
+	template222 = function(header, func, isroutine){
+
+		// settings
+		var globals = isroutine ? routines : templates,
+			parts = isroutine ? header.split(")").shift().split("(") : header.split(">").shift().split("<"),
+			name = parts[0];
+
+		// no spaces
+		header = header.split(" ").join("");
+
+		if(debug && userules) checkName(name);
+
+		// duplicate?
+		if(globals[name]) redeclareError(header);
+
+		// append global templates
+		globals[name] = {name: name, params: parts[1].split(","), func: func};
 	},
 
 	castParam = function(value, type, name){
@@ -431,13 +476,19 @@ declarejs = (function(){
 			}
 		}
 
-		// extend?
+		// has parent?
 		if(struct.parent){
+
+			// extend
 			var pc = struct.parent.c,
 				tempFunc = pc.prototype.__realconstruct;
 			pc.prototype.__realconstruct = emptyFunc;
 			c.prototype = new pc();
 			pc.prototype.__realconstruct = tempFunc;
+
+			// append globals
+			parents[name] = parentname;
+			parentclasses[name] = pc;
 		}
 
 		// includes
@@ -470,6 +521,9 @@ declarejs = (function(){
 		// extras
 		c.__class = name;
 		c.__parent = parentname;
+
+		// append makers
+		makers[name] = makeClass;
 		
 		// return class
 		return c;
@@ -523,7 +577,9 @@ declarejs = (function(){
 
 			// copy members and keys
 			var pc = parent.c;
-			for(var item in pc.prototype) c[name] = proto[item] = pc.prototype[item];
+
+			var temp = {};
+			for(var item in pc.prototype) c[item] = proto[item] = pc.prototype[item];
 			for(var item in parent.members) struct.members[item] = parent.members[item];
 			for(var item in parent.keys) struct.keys[item] = parent.keys[item];
 
@@ -538,11 +594,13 @@ declarejs = (function(){
 		// call user-defined function
 		var newmembers = struct.func.apply({}, struct.includes) || {};
 
+		// add base constructor
+		if(!parent && !newmembers.__construct) newmembers.__construct = emptyFunc;
+
 		// add new members
 		for(var item in newmembers) addMember(item, newmembers[item], struct);
 
 		// add built-in members
-		if(!proto.__construct) proto.__construct = c.__construct = emptyFunc; // construct
 		c.__class = proto.__class = name; // class
 		c.__parent = proto.__parent = parent ? parent.name : false; // parent
 		for(var item in keys) members_bykey[keys[item]] = struct.members[item];
@@ -559,7 +617,7 @@ declarejs = (function(){
 				// singleton...
 				proto.__realconstruct = function(){
 					// as function call
-					if(!this.__class) return singles[name] || makeWith(name, arguments);
+					if(!this.__class) return singles[name] || makeClass(name, arguments);
 
 					// as instance creation
 					if(singles[name]) violationError(C_SINGLETON, name);
@@ -569,7 +627,7 @@ declarejs = (function(){
 			}
 		}
 
-		// make caster
+		// append globals
 		casters[name] = function(value){if(value instanceof c) return value;};
 
 		// return
@@ -671,11 +729,11 @@ declarejs = (function(){
 	}});
 
 	declare("abs Model : Base", function(keys, self, parent){return {
-
+		/*
 		"__construct": function(){ // --- WHY IS THIS NECESSARY !!!!!!
 			parent.__construct.apply(this, arguments);
 		},
-
+		*/
 		"thi each": function(func){
 			for(var item in this){
 				if(this.has(item)) func(item, this.get(item));
@@ -692,6 +750,8 @@ declarejs = (function(){
 
 		"__construct": function(data){
 			parent.__construct.call(this);
+
+			// date data first
 			if(data === undefined) this[keys.data] = this.make_data();
 			else this.set_data(data);
 		},
@@ -711,6 +771,10 @@ declarejs = (function(){
 
 	declare("Map : Data", function(keys, self, parent){return {
 
+		"__construct": function(values){
+			parent.__construct.call(this);
+			if(values) this.values(values);
+		},
 
 		"make_data": function(){
 			return {};
@@ -764,7 +828,7 @@ declarejs = (function(){
 			return this[keys.data][name] || _else;
 		},
 
-		// cast
+		// casts
 
 		"str to_string": function(){
 			return JSON.stringify(this[keys.data]);
@@ -800,10 +864,11 @@ declarejs = (function(){
 		},
 
 		"set": function(pos, value){
+			var data = this[keys.data];
 			value = this.convert(value);
 			if(value === undefined) return this;
-			if(pos < 0) pos = this[keys.data].length + pos;
-			else if(pos === (data.length-1)) return data.push(value);
+			if(pos < 0) pos = data.length + pos;
+			else if(pos === data.length) return data.push(value);
 			else if(data[pos] !== undefined) return data[pos] = value;
 			return this;
 		},
@@ -846,7 +911,6 @@ declarejs = (function(){
 		}
 
 	}});
-	
 
 
 	// --- datatype --- //
@@ -882,7 +946,6 @@ declarejs = (function(){
 
 	datatype(C_INTEGER, C_NUMBER, function(value){
 		value = parseInt(value);
-		//debugger;
 		if(!isNaN(value)) return value;
 	}),
 
@@ -918,12 +981,19 @@ declarejs = (function(){
 		if(value && classes[value]) return value;
 	}),
 
+	// --- routines --- //
+
+	routine("parentof(type)", function(type){
+		return "djs.ui.Control";
+	});
+
 
 	// --- templates --- //
 
+
 	template("Data<type>", function(classname, type){
 
-		declare(classname + " : Data", function(keys, self){ return {
+		declare(classname + " : " + templateParent("Data", type), function(keys, self){ return {
 
 			"pro type": type
 
@@ -933,7 +1003,7 @@ declarejs = (function(){
 	
 	template("Map<type>", function(classname, type){
 
-		declare(classname + " : Map", function(keys, self){ return {
+		declare(classname + " : " + templateParent("Map", type), function(keys, self){ return {
 
 			"pro type": type,
 
@@ -943,7 +1013,7 @@ declarejs = (function(){
 
 	template("List<type>", function(classname, type){
 
-		declare(classname + " : List", function(keys, self){ return {
+		declare(classname + " : " + templateParent("List", type), function(keys, self){ return {
 
 			"pro type": type,
 
@@ -963,20 +1033,23 @@ declarejs = (function(){
 	
 	declare.template = template;
 	declare.datatype = datatype;
-	//declare.generate = generate;
 	declare.cast = cast;
 	declare.mustCast = mustCast;
 	declare.valid = valid;
 	declare.get = get;
+	declare.load = load;
+	declare.fill = fill;
 	declare.make = make;
-	declare.makeWith = makeWith;
+	declare.makeClass = makeClass;
 	declare.compile = compile;
 	declare.classes = getClasses;
 	declare.config = config;
+	declare.member = member;
 	declare.attribute = attribute;
 	declare.attributes = attributes;
-	//declare.load = load;
-	//declare.fill = fill;
+	declare.className = className;
+	declare.parentName = parentName;
+	declare.parentClass = parentClass;
 	if(debug) declare.inspect = inspect; // internal use only
 	return declare;
 

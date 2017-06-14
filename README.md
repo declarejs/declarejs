@@ -14,7 +14,7 @@ The best way to create JavaScript classes.  Syntax and features similar to other
 - No references to "prototype"
 - No spaghetti code
 - No other files required to start
-- Less than 8K!
+- Less than 12K!
 
 
 ## Sample

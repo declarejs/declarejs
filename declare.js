@@ -14,7 +14,7 @@ declarejs = (function(){
 	templates = {},
 	routines = {},	
 	casters = {},
-	makers = {},
+	makers = {},		// name => make functions (for datatypes and classes)
 	parents = {}, 		// name => parent name (for datatypes and classes)
 	parentclasses = {}, // classname => parent class (for performance)
 	compiles = [], 		// compile queue
@@ -259,7 +259,7 @@ declarejs = (function(){
 						this[member.key] = cast(value, member.type); 
 						if(this[member.key] === undefined){
 							this[member.key] = this["make_" + name].call(this, value);
-							if(this[member.key] === undefined) error("valueRequired: " + name);
+							if(this[member.key] === undefined) requiredError("value", name);
 						}
 						return this;
 					}, struct); 
@@ -322,8 +322,8 @@ declarejs = (function(){
 		// checks
 		if(debug && userules){
 			checkName(name);
-			if(typeof(parent) !== C_STRING) error("needsParent", name);
-			if(name.toLowerCase() !== name) error("needsLowercase", name);
+			if(typeof(parent) !== C_STRING) requiredError("parent", name);
+			if(name.toLowerCase() !== name) malformedError("case", name);
 		}
 
 		// enum?
@@ -353,8 +353,8 @@ declarejs = (function(){
 	},
 
 	checkName = function(name){
-		if(name.split(".").length < 2) violationError("naming", "must prefix " + name); // dot required and no spaces allowed
-		if(name.split(" ").length > 1) violationError("naming", name); // dot required and no spaces allowed
+		if(name.split(".").length < 2) requiredError("prefix", name); // dot required and no spaces allowed
+		if(name.split(" ").length > 1) malformedError("spaces", name); // dot required and no spaces allowed
 	},
 
 	routine = function(header, func){
@@ -382,25 +382,6 @@ declarejs = (function(){
 	templateParent = function(name, type){
 		var parent = parentName(type);
 		return parent ? name + "<" + parent + ">" : name;
-	},
-
-	template222 = function(header, func, isroutine){
-
-		// settings
-		var globals = isroutine ? routines : templates,
-			parts = isroutine ? header.split(")").shift().split("(") : header.split(">").shift().split("<"),
-			name = parts[0];
-
-		// no spaces
-		header = header.split(" ").join("");
-
-		if(debug && userules) checkName(name);
-
-		// duplicate?
-		if(globals[name]) redeclareError(header);
-
-		// append global templates
-		globals[name] = {name: name, params: parts[1].split(","), func: func};
 	},
 
 	castParam = function(value, type, name){
@@ -658,6 +639,10 @@ declarejs = (function(){
 		error(prefix + "Violation", desc);
 	},
 
+	requiredError = function(prefix, desc){
+		error(prefix + "Required", desc);
+	},
+
 	mismatchError = function(prefix, desc){
 		error(prefix + "Mismatch", desc);
 	},
@@ -729,11 +714,7 @@ declarejs = (function(){
 	}});
 
 	declare("abs Model : Base", function(keys, self, parent){return {
-		/*
-		"__construct": function(){ // --- WHY IS THIS NECESSARY !!!!!!
-			parent.__construct.apply(this, arguments);
-		},
-		*/
+		
 		"thi each": function(func){
 			for(var item in this){
 				if(this.has(item)) func(item, this.get(item));
@@ -991,7 +972,7 @@ declarejs = (function(){
 	// --- templates --- //
 
 
-	template("Data<type>", function(classname, type){
+	template("Model<type>", function(classname, type){ // NOTE: keep template name as Model not Data
 
 		declare(classname + " : " + templateParent("Data", type), function(keys, self){ return {
 

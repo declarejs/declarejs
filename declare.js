@@ -174,14 +174,14 @@ declarejs = (function(){
 		return Obj.__member(key);
 	},
 
-	attribute = function(Obj, name){ // set and get without errors
+	prop = function(Obj, name){ // set and get without errors
 		if(arguments.length === 1) return Obj["get_" + name] ? Obj["get_" + name]() : undefined;
 		if(Obj["set_" + name]) Obj["set_" + name](arguments[1]);
 		return Obj;
 	},
 
-	attributes = function(Obj, values){ // set values without errors
-		if(!values) return Obj.values();
+	props = function(Obj, values){ // set values without errors
+		if(!values) return Obj.props();
 		for(var item in values){
 			if(Obj["set_" + item]) Obj["set_" + item](values[item]);
 		}
@@ -254,19 +254,8 @@ declarejs = (function(){
 						return this;
 					}, struct); 
 				break;
-				case "set!!": 
-					addMember("set_"+name, function(value){
-						this[member.key] = cast(value, member.type); 
-						if(this[member.key] === undefined){
-							this[member.key] = this["make_" + name].call(this, value);
-							if(this[member.key] === undefined) requiredError("value", name);
-						}
-						return this;
-					}, struct); 
-				break;
 				case "all": 	parts.push("set", "get", "make"); break;
 				case "all!": 	parts.push("set!", "get", "make"); break;
-				case "all!!": 	parts.push("set!!", "get", "make"); break;
 				default: 
 					if(part.length){
 						if(debug && member.type) malformedError(header);
@@ -285,8 +274,8 @@ declarejs = (function(){
 			// check with parent
 			if(debug){
 				if(member.access !== pmember.access) mismatchError("access", header);
-				if(pmember.access === C_PRIVATE) error(C_PRIVATE + "Member", header);
-				if(pmember[C_FINAL]) error(C_FINAL + "Member", header);
+				if(pmember.access === C_PRIVATE) violationError(C_PRIVATE, header);
+				if(pmember[C_FINAL]) violationError(C_FINAL, header);
 				if((member.ismethod && !pmember.ismethod) || (!member.ismethod && pmember.ismethod)) mismatchError(C_TYPE, header);
 				if((member[C_STATIC] && !pmember[C_STATIC]) || (!member[C_STATIC] && pmember[C_STATIC])) mismatchError(C_STATIC, header);
 				// --- WIP: check type compatability
@@ -314,11 +303,18 @@ declarejs = (function(){
 	},
 
 	datatype = function(name, parent, mixed, value){
-		var enums, func;
+		var enums, func, 
+			maker = makeDatatype;
 
 		// duplicate?
 		if(datatypes[name]) redeclareError(name);
 		
+		// maker?
+		if(typeof(value) === "function"){
+			maker = value;
+			value = undefined;
+		}
+
 		// checks
 		if(debug && userules){
 			checkName(name);
@@ -349,7 +345,7 @@ declarejs = (function(){
 		datatypes[name] = {name: name, parent: parent, func: func, enums: enums, value: value, hasvalue: (value !== undefined)};
 		casters[name] = func;
 		parents[name] = parent;
-		makers[name] = makeDatatype;
+		makers[name] = maker;
 	},
 
 	checkName = function(name){
@@ -663,7 +659,7 @@ declarejs = (function(){
 	declare("abs Base", function(keys, self, parent){return {
 
 		"__construct": function(values){
-			if(values) this.values(values);
+			if(values) this.props(values);
 		},
 
 		// access
@@ -683,7 +679,7 @@ declarejs = (function(){
 			return this["get_" + name]();
 		},
 
-		"mix values": function(obj){
+		"mix props": function(obj){
 			if(obj){
 				for(var item in obj) this.set(item, obj[item]);
 				return this;
@@ -708,7 +704,7 @@ declarejs = (function(){
 		},
 
 		"obj to_object": function(type){
-			return this.values();
+			return this.props();
 		}
 
 	}});
@@ -754,7 +750,7 @@ declarejs = (function(){
 
 		"__construct": function(values){
 			parent.__construct.call(this);
-			if(values) this.values(values);
+			if(values) this.props(values);
 		},
 
 		"make_data": function(){
@@ -762,7 +758,7 @@ declarejs = (function(){
 		},
 
 		"get_data": function(){
-			return this.values();
+			return this.props();
 		},
 
 		"convert": function(value, key){
@@ -788,7 +784,7 @@ declarejs = (function(){
 			return c;
 		},
 
-		"values": function(obj){
+		"props": function(obj){
 			if(obj){
 				for(var item in obj) this.set(item, obj[item]);
 				return this;
@@ -833,7 +829,7 @@ declarejs = (function(){
 			return this[keys.data].length;
 		},
 
-		"values": function(arr){
+		"props": function(arr){
 			if(arr){
 				for(var i=0; i<arr.length; i++) this.set(i, arr[i]);
 				return this;
@@ -875,7 +871,7 @@ declarejs = (function(){
 		},
 
 		"parse": function(string, token){
-			return this.values(string.split(token));
+			return this.props(string.split(token));
 		},
 
 		"stringify": function(token){
@@ -937,11 +933,13 @@ declarejs = (function(){
 
 	datatype(C_OBJECT, C_MIXED, function(value){
 		if(typeof(value) === "object") return value;
+	}, function(){ // custom maker
+		return {};
 	}),
 
 	datatype(C_FUNCTION, C_MIXED, function(value){
 		if(typeof(value) === "function") return value;
-	}),
+	}, emptyFunc), // custom maker
 
 	datatype(C_CLASS, C_FUNCTION, function(value){
 		if(typeof(value) === "function" && value.__class) return value;
@@ -1021,13 +1019,13 @@ declarejs = (function(){
 	declare.load = load;
 	declare.fill = fill;
 	declare.make = make;
-	declare.makeClass = makeClass;
+	declare.makeArgs = makeClass; // different public name
 	declare.compile = compile;
-	declare.classes = getClasses;
+	declare.classes = getClasses; // different public name
 	declare.config = config;
 	declare.member = member;
-	declare.attribute = attribute;
-	declare.attributes = attributes;
+	declare.prop = prop;
+	declare.props = props;
 	declare.className = className;
 	declare.parentName = parentName;
 	declare.parentClass = parentClass;

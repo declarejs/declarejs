@@ -75,6 +75,16 @@ declarejs = (function(){
 		if(debug) debugger;
 	},
 
+	checkAccess = function(Obj, type, mixed){
+		if(debug){
+			if(typeof(mixed) === "object"){
+				for(var item in mixed){
+					if(!Obj[type + "_" + item]) missingError(Obj.__class + "::" + type + "_" + item);
+				}
+			} else if(!Obj[type + "_" + mixed]) missingError(Obj.__class + "::" + type + "_" + mixed);
+		}
+	},
+
 	emptyFunc = function(){},
 
 	load = function(Obj, name){ // fill property if empty
@@ -626,8 +636,14 @@ declarejs = (function(){
 		return struct;
 	},
 
-	error = function(name, desc){
-		throw new Error(name + ": " + desc);
+	warning = function(name, desc){
+		error(name, desc, 1);
+	},
+
+	error = function(name, desc, iswarning){
+		if(typeof(desc) === C_STRING) name += ": " + desc;
+		if(iswarning) return console.warn(name);
+		throw new Error(name);
 	},
 
 	malformedError = function(header){
@@ -1034,6 +1050,8 @@ declarejs = (function(){
 	declare.load = load;
 	declare.fill = fill;
 	declare.make = make;
+	declare.warning = warning;
+	declare.error = error;
 	declare.compile = compile;
 	declare.classes = getClasses; // different public name
 	declare.config = config;
@@ -1043,6 +1061,8 @@ declarejs = (function(){
 	declare.className = className;
 	declare.parentName = parentName;
 	declare.parentClass = parentClass;
+	declare.checkAccess = checkAccess;
+	declare.debug = function(){return debug;}; // no direct access to this
 	if(debug) declare.inspect = inspect; // internal use only
 	return declare;
 

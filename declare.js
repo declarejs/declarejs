@@ -120,22 +120,18 @@ declarejs = (function(){
 		return strict ? (value === cast(value, type)) : (value == cast(value, type));
 	},
 
-	make = function(type){
-		if(makers[type]) return makers[type](type, arguments);
+	make = function(type, param){
+		if(makers[type]) return makers[type](type, param);
+		if(window[type]){ // global class
+			makers[type] = function(param){return (param === undefined) ? new window[type] : new window[type](param);}
+			return makers[type](param);
+		}
 		missingError(type);
 	},
 
-	makeClass = function(name, a){ // not public, added to makers
-		var c = get(name);
-		if(!a) return new c();
-		switch(a.length){
-			case 0: return new c();
-			case 1: return new c(a[1]);
-			case 2: return new c(a[1], a[2]);
-			case 3: return new c(a[1], a[2], a[3]);
-			case 4: return new c(a[1], a[2], a[3], a[4]);
-			default: return new c(a[1], a[2], a[3], a[4], a[5]);
-		}
+	makeClass = function(type, param){
+		var c = get(type);
+		return (param === undefined) ? new c : new c(param);
 	},
 
 	makeDatatype = function(type){ // not public, added to makers
@@ -233,8 +229,13 @@ declarejs = (function(){
 				break; 
 				case "this": 
 					member.thistype = true;
-					member.type = struct.name; 
+					member.type = struct.name;
 				break;
+				case "mak-": case "make-": 
+					delete struct.preloads[name]; 
+				break;
+				case "mak+": // make and preload
+				case "make+": struct.preloads[name] = name; // pass through
 				case "make":
 					if(!members["make_"+name]) addMember("make_"+name, function(){return make(member.type, true);}, struct); 
 				break;
@@ -244,7 +245,7 @@ declarejs = (function(){
 				case "set": 
 					if(!members["set_"+name]) addMember("set_"+name, function(value){this[member.key] = cast(value, member.type); return this;}, struct); 
 				break;
-				case "set!": 
+				case "set+": 
 					addMember("set_"+name, function(value){
 						if(value === undefined) this[member.key] = this["make_" + name].call(this);
 						else {
@@ -255,7 +256,8 @@ declarejs = (function(){
 					}, struct); 
 				break;
 				case "all": 	parts.push("set", "get", "make"); break;
-				case "all!": 	parts.push("set!", "get", "make"); break;
+				case "all+": 	parts.push("set+", "get", "make"); break;
+				case "all++": 	parts.push("set+", "get", "make+"); break;
 				default: 
 					if(part.length){
 						if(debug && member.type) malformedError(header);
@@ -435,6 +437,7 @@ declarejs = (function(){
 		struct.members = {};
 		struct.members_new = {};
 		struct.members_bykey = {};
+		struct.preloads = {}; // new concept
 
 		// parse header
 		for(var i=0; i<parts2.length; i++){
@@ -546,6 +549,7 @@ declarejs = (function(){
 			parent = struct.parent,
 			proto = c.prototype,
 			keys = struct.keys,
+			preloads = struct.preloads,
 			members_bykey = struct.members_bykey;
 
 		// parent?
@@ -559,6 +563,7 @@ declarejs = (function(){
 			for(var item in pc.prototype) c[item] = proto[item] = pc.prototype[item];
 			for(var item in parent.members) struct.members[item] = parent.members[item];
 			for(var item in parent.keys) struct.keys[item] = parent.keys[item];
+			for(var item in parent.preloads) struct.preloads[item] = parent.preloads[item];
 
 			// singleton?
 			if(parent[C_SINGLETON]) struct[C_SINGLETON] = true;
@@ -589,8 +594,17 @@ declarejs = (function(){
 		// non-abstract constructors (see declare for abstract constructor)
 		if(!struct[C_ABSTRACT]){
 			// standard and singletons
-			if(!struct[C_SINGLETON]) proto.__realconstruct = proto.__construct; 
-			else {
+			if(!struct[C_SINGLETON]){
+				for(var haspreload in preloads) break; // has preload?
+				if(!haspreload) proto.__realconstruct = proto.__construct; // no preloads
+				else {
+					// construct with preloads
+					proto.__realconstruct = function(){
+						for(var item in preloads) this[keys[item]] = this["make_" + item]();
+						this.__construct.apply(this, arguments);
+					};
+				}
+			} else {
 				// singleton...
 				proto.__realconstruct = function(){
 					// as function call
@@ -599,6 +613,7 @@ declarejs = (function(){
 					// as instance creation
 					if(singles[name]) violationError(C_SINGLETON, name);
 					singles[name] = this;
+					for(var item in preloads) this[keys[item]] = this["make_" + item](); // preload?
 					this.__construct.apply(this, arguments);
 				};
 			}
@@ -1019,7 +1034,6 @@ declarejs = (function(){
 	declare.load = load;
 	declare.fill = fill;
 	declare.make = make;
-	declare.makeArgs = makeClass; // different public name
 	declare.compile = compile;
 	declare.classes = getClasses; // different public name
 	declare.config = config;

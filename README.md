@@ -1,5 +1,5 @@
 # declarejs
-The best way to create JavaScript classes.  Syntax and features similar to other robust languages like C# and Java.  Bring structure and control to your client-side code.
+Most powerful way to create JavaScript classes.  Syntax and features similar to other robust languages like C# and Java.  Bring structure and control to your client-side code.
 
 - Private, protected, and static members
 - Abstract classes and singletons
@@ -17,7 +17,30 @@ The best way to create JavaScript classes.  Syntax and features similar to other
 - Less than 12K!
 
 
-## Sample
+
+## Hello World
+```
+var cPerson = declarejs("djs.Person", function(keys, self){return {
+
+	"protected string firstname": "",
+	"protected string lastname": "",
+
+	"__construct": function(firstname, lastname){
+		this[keys.firstname] = firstname;
+		this[keys.lastname] = lastname;
+	},
+	
+	"string speak": function(){
+		return this[keys.firstname] + " " + this[keys.lastname];
+	}
+	
+}});
+
+var Person = new cPerson("Hello", "World");
+alert(Person.speak());
+```
+
+## Extending Sample
 ```
 var declare = declarejs; // global
 

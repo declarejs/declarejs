@@ -1,0 +1,18 @@
+{
+    "name": "declarejs",
+    "version": "2.0.8",
+    "description": "The best way to create JavaScript classes.",
+    "categories": [
+        "JavaScript classes"
+    ],
+    "main": "declare.js",
+    "github": "https://github.com/declarejs/declarejs",
+    "bugs": {
+        "web": "https://github.com/declarejs/declarejs/issues"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/declarejs/declarejs.git"
+    }
+}

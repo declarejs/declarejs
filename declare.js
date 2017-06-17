@@ -1,7 +1,7 @@
 
 declarejs = (function(){
 
-	var version = '2.0.8',
+	var version = '2.0.9',
 	debug = true,
 	inspecting = false,
 	userules = false, // no rules for internal (see bottom)
@@ -75,16 +75,6 @@ declarejs = (function(){
 		if(debug) debugger;
 	},
 
-	checkAccess = function(Obj, type, mixed){
-		if(debug){
-			if(typeof(mixed) === "object"){
-				for(var item in mixed){
-					if(!Obj[type + "_" + item]) missingError(Obj.__class + "::" + type + "_" + item);
-				}
-			} else if(!Obj[type + "_" + mixed]) missingError(Obj.__class + "::" + type + "_" + mixed);
-		}
-	},
-
 	emptyFunc = function(){},
 
 	load = function(Obj, name){ // fill property if empty
@@ -141,6 +131,7 @@ declarejs = (function(){
 
 	makeClass = function(type, param){
 		var c = get(type);
+		if(singles[type]) return singles[type];
 		return (param === undefined) ? new c : new c(param);
 	},
 
@@ -1061,7 +1052,6 @@ declarejs = (function(){
 	declare.className = className;
 	declare.parentName = parentName;
 	declare.parentClass = parentClass;
-	declare.checkAccess = checkAccess;
 	declare.debug = function(){return debug;}; // no direct access to this
 	if(debug) declare.inspect = inspect; // internal use only
 	return declare;

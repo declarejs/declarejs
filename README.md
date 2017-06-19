@@ -16,18 +16,20 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - No other files required to start
 - Less than 12K!
 
-
+```
+var declare = declarejs; // grab the global and start declaring...
+```
 
 ## Hello World
 ```
-var cPerson = declarejs("djs.Person", function(keys, self){return {
+var cPerson = declare("djs.Person", function(keys, self){return {
 
 	"protected string firstname": "",
 	"protected string lastname": "",
 
-	"__construct": function(firstname, lastname){
-		this[keys.firstname] = firstname;
-		this[keys.lastname] = lastname;
+	"__construct": function(value1, value2){
+		this[keys.firstname] = declare.to(value1, "string");
+		this[keys.lastname] = declare.to(value2, "string");
 	},
 	
 	"string speak": function(){
@@ -40,10 +42,8 @@ var Person = new cPerson("Hello", "World");
 alert(Person.speak());
 ```
 
-## Extending Sample
+## Extending classes and member access
 ```
-var declare = declarejs; // global
-
 declare("abstract djs.Animal", function(keys, self){return {
 
 	"protected string name": "",
@@ -99,10 +99,10 @@ declare("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog)
 
 }});
 
-// --- implement --- //
+// implement
 
 var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person"});
 var Joe = new classes.Person("Joe", "Rufus");
 
-alert(Joe.speak() + "<br/>Animals: " + classes.Animal.names.join(", "));
+alert(Joe.speak() + ", Animals: " + classes.Animal.names.join(", "));
 ```

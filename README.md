@@ -27,7 +27,7 @@ var declare = declarejs; // grab global and start coding
 ```
 var cPerson = declare("djs.Person", function(keys, self){return {
 
-	"protected string name": "", // or shorhand "pro str name"
+	"protected string name": "", // shorthand is "pro str name"
 
 	"__construct": function(name){
 		this[keys.name] = declare.cast(name, "string");
@@ -40,7 +40,7 @@ var cPerson = declare("djs.Person", function(keys, self){return {
 }});
 
 var Person = new cPerson("Hello World");
-console.log(Person.speak());
+console.log(Person.speak()); 	// "My name is Hello World"
 ```
 
 ## Class options and member access

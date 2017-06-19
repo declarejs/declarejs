@@ -48,7 +48,7 @@ console.log(Person.speak());
 declare("abstract djs.Animal", function(keys, self){return {
 
 	"protected string name": "", 	// shorhand is "pro str name"
-	"static Array names": [],		// static member
+	"static Array names": [],	// static member
 
 	"__construct": function(name){
 		if(name) this[keys.name] = declare.cast(name, "string");
@@ -75,7 +75,7 @@ declare("djs.Person : djs.Animal", ["djs.Dog"], function(keys, self, parent, cDo
 	},
 
 	"speak": function(){
-		return this[keys.Dog] ? "I'm " + this[keys.name] + " and I have a dog." : "I'm " + this[keys.name];
+		return this[keys.Dog] ? "I'm " + this[keys.name] + " and have a dog." : "I'm " + this[keys.name];
 	}
 	
 }});
@@ -93,7 +93,7 @@ var c = declare.classes({
 	Jeff: "djs.Jeff"
 });
 
-console.log(new c.Person("Joe", new c.Dog("Smuckers")).speak());
-console.log(c.Jeff().speak()); 	// no "new" for singletons
-console.log("From: " + c.Animal.names.join(", "));
+console.log(new c.Person("Joe", new c.Dog("Smuckers")).speak()); // "I'm Joe and have a dog."
+console.log(c.Jeff().speak()); 	// "I'm Jeff"  (no "new" for singletons)
+console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff"
 ```

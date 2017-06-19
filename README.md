@@ -43,7 +43,7 @@ var Person = new cPerson("Hello World");
 console.log(Person.speak());
 ```
 
-## Extending classes and member access
+## Class options and member access
 ```
 declare("abstract djs.Animal", function(keys, self){return {
 

@@ -10,7 +10,10 @@
     "bugs": {
         "web": "https://github.com/declarejs/declarejs/issues"
     },
-    "license": "MIT",
+    "license": "MIT",    
+    "volo": {
+        "url": "https://cdn.rawgit.com/declarejs/declarejs/{version}/declare.min.js"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/declarejs/declarejs.git"

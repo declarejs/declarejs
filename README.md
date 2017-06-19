@@ -17,92 +17,83 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - Less than 12K!
 
 ```
-var declare = declarejs; // grab the global and start declaring...
+<script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
+<script type="text/javascript">
+var declare = declarejs; // grab global and start coding
+...
 ```
 
 ## Hello World
 ```
 var cPerson = declare("djs.Person", function(keys, self){return {
 
-	"protected string firstname": "",
-	"protected string lastname": "",
+	"protected string name": "", // or shorhand "pro str name"
 
-	"__construct": function(value1, value2){
-		this[keys.firstname] = declare.to(value1, "string");
-		this[keys.lastname] = declare.to(value2, "string");
+	"__construct": function(name){
+		this[keys.name] = declare.cast(name, "string");
 	},
 	
 	"string speak": function(){
-		return this[keys.firstname] + " " + this[keys.lastname];
+		return "My name is " + this[keys.name];
 	}
 	
 }});
 
-var Person = new cPerson("Hello", "World");
-alert(Person.speak());
+var Person = new cPerson("Hello World");
+console.log(Person.speak());
 ```
 
 ## Extending classes and member access
 ```
 declare("abstract djs.Animal", function(keys, self){return {
 
-	"protected string name": "",
-	"static Array names": [],
+	"protected string name": "", 	// shorhand is "pro str name"
+	"static Array names": [],		// static member
 
 	"__construct": function(name){
-		if(name) this.setName(name);
-		if(this[keys.name]) self.names.push(this[keys.name]);
+		if(name) this[keys.name] = declare.cast(name, "string");
+		self.names.push(this[keys.name]);
 	},
 	
-	"abstract string speak": undefined,
-
-	"string getName": function(){
-		return this[keys.name];
-	},
-	
-	"void setName": function(value){
-		this[keys.name] = declare.cast(value, "string");
-	}
+	"abstract string speak": undefined 	// override or throw error
 	
 }});
 
 declare("djs.Dog : djs.Animal", function(keys, self, parent){return {
 
-	"speak": function(){
-		return "woof";
-	}
-
+	"speak": function(){return "Woof";}
+	
 }});
 
-declare("djs.Person : djs.Animal", "djs.Dog", function(keys, self, parent, cDog){return {
-
+declare("djs.Person : djs.Animal", ["djs.Dog"], function(keys, self, parent, cDog){return {
+	
 	"protected djs.Dog Dog": undefined,
 
-	"__construct": function(name, dog){
+	"__construct": function(name, Dog){
 		parent.__construct.call(this, name);
-		if(dog) this.setDog(new cDog(dog));
-	},
-
-	"djs.Dog getDog": function(){
-		return this[keys.Dog];
-	},
-
-	"void setDog": function(Obj){
-		this[keys.Dog] = declare.cast(value, cDog);
+		if(Dog) this[keys.Dog] = declare.cast(Dog, cDog); 	// include djs.cDog in class
 	},
 
 	"speak": function(){
-		var str = "My name is " + this.getName();
-		if(this.Dog) str += " and my dog " + this.Dog.getName() + "... " + this.Dog.speak();
-		return str;
+		return this[keys.Dog] ? "I'm " + this[keys.name] + " and I have a dog." : "I'm " + this[keys.name];
 	}
+	
+}});
+
+declare("singleton djs.Jeff : djs.Person", function(keys, self, parent){return {
+
+	"protected name": "Jeff", 	// string type is implied
 
 }});
 
-// implement
+var c = declare.classes({
+	Animal: "djs.Animal", 
+	Person: "djs.Person", 
+	Dog: "djs.Dog", 
+	Jeff: "djs.Jeff"
+});
 
-var classes = declare.classes({Animal: "djs.Animal", Person: "djs.Person"});
-var Joe = new classes.Person("Joe", "Rufus");
-
-alert(Joe.speak() + ", Animals: " + classes.Animal.names.join(", "));
+console.log(new c.Person("Joe", new c.Dog("Smuckers")).speak());
+console.log(c.Jeff().speak()); 	// no "new" for singletons
+console.log("From: " + c.Animal.names.join(", "));
 ```

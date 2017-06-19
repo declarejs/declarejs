@@ -120,26 +120,32 @@ declarejs = (function(){
 		return strict ? (value === cast(value, type)) : (value == cast(value, type));
 	},
 
-	make = function(type, param){
-		if(makers[type]) return makers[type](type, param);
-		if(window[type]){ // global class
-			makers[type] = function(param){return (param === undefined) ? new window[type] : new window[type](param);}
-			return makers[type](param);
-		}
+	make = function(type, args){
+		if(makers[type]) return makers[type](type, args || []);
+		if(window[type]) return makeArgs(window[type], args || []);
 		missingError(type);
 	},
 
-	makeClass = function(type, param){
-		var c = get(type);
-		if(singles[type]) return singles[type];
-		return (param === undefined) ? new c : new c(param);
-	},
-
-	makeDatatype = function(type){ // not public, added to makers
+	makeDatatype = function(type, args){ // not public, added to makers
 		var datatype = datatypes[type];
 		if(datatype.hasvalue) return datatype.value;
 		datatype.hasvalue = true;
 		return datatype.value = makeDatatype(datatype.parent);
+	},
+
+	makeClass = function(type, args){
+		return singles[type] || makeArgs(get(type), args);
+	},
+
+	makeArgs = function(c, args){
+		switch(args.length){
+			case 0: return new c();
+			case 1: return new c(args[0]);
+			case 2: return new c(args[0], args[1]);
+			case 3: return new c(args[0], args[1], args[2]);
+			case 4: return new c(args[0], args[1], args[2], args[3]);
+		}
+		return new c(args[0], args[1], args[2], args[3], args[4]);
 	},
 
 	compile = function(){
@@ -494,9 +500,17 @@ declarejs = (function(){
 		// constructor
 		if(struct[C_ABSTRACT]){
 			c.prototype.__realconstruct = function(){error(C_ABSTRACT + "Instance", name);}
+		} else if(struct[C_SINGLETON]) {
+			c.prototype.__realconstruct = function(){
+				assemble(name);
+				return singles[name] || makeArgs(c, arguments);
+			}
 		} else {
 			// auto-assemble here, overridden in the assemble function
-			c.prototype.__realconstruct = function(){assemble(name); this.__construct.apply(this, arguments);}
+			c.prototype.__realconstruct = function(){
+				assemble(name);
+				this.__construct.apply(this, arguments);
+			}
 		}
 
 		// extras
@@ -609,7 +623,7 @@ declarejs = (function(){
 				// singleton...
 				proto.__realconstruct = function(){
 					// as function call
-					if(!this.__class) return singles[name] || makeClass(name, arguments);
+					if(!this.__class) return singles[name] || makeArgs(c, arguments);
 
 					// as instance creation
 					if(singles[name]) violationError(C_SINGLETON, name);
@@ -984,10 +998,11 @@ declarejs = (function(){
 
 	// --- routines --- //
 
+	/*
 	routine("parentof(type)", function(type){
 		return "djs.ui.Control";
 	});
-
+	*/
 
 	// --- templates --- //
 

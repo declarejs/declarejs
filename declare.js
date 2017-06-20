@@ -11,7 +11,7 @@ declarejs = (function(){
 	structs = {}, 	// class structures
 	classes = {}, 	// assembled classes
 	datatypes = {},
-	templates = {},
+	templates = {},		// templates
 	routines = {},	
 	casters = {},
 	makers = {},		// name => make functions (for datatypes and classes)
@@ -115,6 +115,23 @@ declarejs = (function(){
 			}
 			return (value instanceof window[type]) ? value : undefined;
 		}
+		// template
+		var parts = type.substr(0, type.length-1).split("<");
+
+		// error?
+		if(parts.length <= 1) missingError(type);
+
+		// check name
+		if(debug) checkName(name, true);
+
+		// template...
+		var name = parts[0],
+			template = templates[name],
+			params = parts[1].split(",").unshift(name);
+
+		if(!template) missingError(type);
+		template.func.apply({}, params);
+		if(casters[type]) return casters[type](value);
 		malformedError(type);
 	},
 

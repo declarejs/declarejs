@@ -110,11 +110,35 @@ declarejs = (function(){
 		if(casters[type]) return casters[type](value); // declared datatype?
 		if(typeof(type) === C_FUNCTION) return (value instanceof type) ? value : undefined; // class function?
 		if(window[type]){ // native class?
-			casters[type] = function(value){if(value instanceof window[type]) return value;} // cache it
+			casters[type] = function(value){
+				if(value instanceof window[type]) return value;
+			}
 			return (value instanceof window[type]) ? value : undefined;
 		}
-		missingError(type); // error
+		// template
+		var parts = type.substr(0, type.length-1).split("<");
+
+		// error?
+		if(parts.length <= 1) missingError(type);
+
+		// check name
+		if(debug) checkName(name, true);
+
+		// template...
+		var name = parts[0],
+			template = templates[name],
+			params = parts[1].split(",").unshift(name);
+			
+		if(!template) missingError(type);
+		template.func.apply({}, params);
+		if(casters[type]) return casters[type](value);
+		malformedError(type);
 	},
+
+	templateParts = function(str){
+		var parts = str.split();
+	},
+
 
 	valid = function(value, type, strict){
 		return strict ? (value === cast(value, type)) : (value == cast(value, type));
@@ -359,9 +383,12 @@ declarejs = (function(){
 		makers[name] = maker;
 	},
 
-	checkName = function(name){
-		if(name.split(".").length < 2) requiredError("prefix", name); // dot required and no spaces allowed
-		if(name.split(" ").length > 1) malformedError("spaces", name); // dot required and no spaces allowed
+	checkName = function(name, istemplate){
+		if(userules){
+			if(name.split(".").length < 2) requiredError("prefix", name);
+			if(name.split(" ").length > 1) malformedError("spaces", name);
+			if((istemplate && (name[0].toLowerCase() !== name[0])) || name[0].toUpperCase() !== name[0]) malformedError("case", name);
+		}
 	},
 
 	routine = function(header, func){
@@ -377,7 +404,7 @@ declarejs = (function(){
 		// no spaces
 		header = header.split(" ").join("");
 
-		if(debug && userules) checkName(name);
+		if(debug) checkName(name);
 
 		// duplicate?
 		if(templates[name]) redeclareError(header);

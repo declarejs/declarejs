@@ -11,7 +11,7 @@ declarejs = (function(){
 	structs = {}, 	// class structures
 	classes = {}, 	// assembled classes
 	datatypes = {},
-	templates = {},
+	templates = {},		// name =>  value
 	routines = {},	
 	casters = {},
 	makers = {},		// name => make functions (for datatypes and classes)

@@ -1,7 +1,7 @@
 
 declarejs = (function(){
 
-	var version = '2.0.9',
+	var version = '2.0.10',
 	debug = true,
 	inspecting = false,
 	userules = false, // no rules for internal (see bottom)
@@ -121,8 +121,11 @@ declarejs = (function(){
 	},
 
 	make = function(type, args){
-		if(makers[type]) return makers[type](type, args || []);
-		if(window[type]) return makeArgs(window[type], args || []);
+		if(args === undefined) args = [];
+		else if(!(args instanceof Array)) args = [args]; // --- WIP
+		
+		if(makers[type]) return makers[type](type, args);
+		if(window[type]) return makeArgs(window[type], args);
 		missingError(type);
 	},
 
@@ -238,14 +241,13 @@ declarejs = (function(){
 					member.thistype = true;
 					member.type = struct.name;
 				break;
-				case "mak-": case "make-": 
-					delete struct.preloads[name]; 
-				break;
-				case "mak+": // make and preload
-				case "make+": struct.preloads[name] = name; // pass through
+				// make
+				case "make+": case "mak+": struct.preloads[name] = name; // mark as preload (and pass through to "make")
 				case "make":
 					if(!members["make_"+name]) addMember("make_"+name, function(){return make(member.type, true);}, struct); 
 				break;
+				case "make-": case "mak-": delete struct.preloads[name]; break; // do not preload
+				// /make
 				case "get": 
 					if(!members["get_"+name]) addMember("get_"+name, function(){return this[member.key];}, struct); 
 				break;

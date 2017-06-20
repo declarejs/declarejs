@@ -1,5 +1,5 @@
 # declarejs
-Most powerful way to create JavaScript classes.  Syntax and features similar to other robust languages like C# and Java.  Bring structure and control to your client-side code.
+Most powerful way to create JavaScript classes.  Syntax and features similar to other languages like C# and Java.  Bring structure and control to your client-side code.
 
 - Private, protected, and static members
 - Abstract classes and singletons
@@ -27,7 +27,7 @@ var declare = declarejs; // grab global and start coding
 ```
 var cPerson = declare("djs.Person", function(keys, self){return {
 
-	"protected string name": "", // shorthand is "pro str name"
+	"protected string name": "",
 
 	"__construct": function(name){
 		this[keys.name] = declare.cast(name, "string");
@@ -71,7 +71,7 @@ declare("djs.Person : djs.Animal", ["djs.Dog"], function(keys, self, parent, cDo
 
 	"__construct": function(name, Dog){
 		parent.__construct.call(this, name);
-		if(Dog) this[keys.Dog] = declare.cast(Dog, cDog); 	// include djs.cDog in class
+		if(Dog) this[keys.Dog] = declare.cast(Dog, cDog); 	// include
 	},
 
 	"speak": function(){
@@ -96,4 +96,37 @@ var c = declare.classes({
 console.log(new c.Person("Joe", new c.Dog("Smuckers")).speak()); // "I'm Joe and have a dog."
 console.log(c.Jeff().speak()); 	// "I'm Jeff"  (no "new" for singletons)
 console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff"
+```
+
+## Datatypes and templates
+```
+declare.datatype("djs.propername", "string", function(value){
+
+	// cast as parent datatype first
+	value = declare.cast(value, "string");
+
+	// return value or undefined to indicate invalid
+	return (value && value.length && value[0].toUpperCase() === value[0]) ? value : undefined;
+});
+
+declare("djs.Vacation : Model", ["List<djs.propername>"], function(keys, self, parent, cNamesList){return {
+
+	"protected djs.propername title": undefined,
+	"protected List<djs.propername> Places": undefined,
+
+	"__construct": function(name, places){
+		parent.__construct.apply(this);
+		this[keys.title] = declare.castMember(this, keys.title);
+		this[keys.Places] = new cNamesList(places);
+	},
+
+	"string description": function(){
+		return this[keys.title] + " is " + this[keys.Places].stringify(", ") + ".";
+	}
+
+}});
+
+var cVacation = declare.get("djs.Vacation");
+var RoadTrip = new cVacation("Summer Trip", ["Portand", "San Francisco", "Los Angeles"]);
+console.log(RoadTrip.description());
 ```

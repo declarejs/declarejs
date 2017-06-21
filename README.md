@@ -16,7 +16,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - No other files required to start
 - Less than 12K!
 
-### Getting started
+### Start
 ```
 <script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
 <script type="text/javascript">
@@ -32,6 +32,7 @@ require.config({
 ```
 bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
+
 
 ## Hello World
 ```
@@ -110,10 +111,10 @@ console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff
 
 ## Datatypes and templates
 ```
-declare.datatype("djs.propername", "string", function(value){
+declare.datatype("djs.propername", "string", function(value, parent){
 
 	// cast as parent datatype first
-	value = declare.cast(value, "string");
+	value = parent(value);
 
 	// return value or undefined to indicate invalid
 	return (value && value.length && value[0].toUpperCase() === value[0]) ? value : undefined;

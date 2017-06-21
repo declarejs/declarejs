@@ -35,7 +35,7 @@ bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 
 
 ## Hello World
-```
+```javascript
 var cPerson = declare("djs.Person", function(keys, self){return {
 
 	"protected string name": "",
@@ -54,8 +54,8 @@ var Person = new cPerson("Hello World");
 console.log(Person.speak()); 	// "My name is Hello World"
 ```
 
-## Class options and member access
-```
+## Classes and members
+```javascript
 declare("abstract djs.Animal", function(keys, self){return {
 
 	"protected string name": "", 	// shorhand is "pro str name"
@@ -110,7 +110,7 @@ console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff
 ```
 
 ## Datatypes and templates
-```
+```javascript
 declare.datatype("djs.propername", "string", function(value, parent){
 
 	// cast as parent datatype first
@@ -127,7 +127,7 @@ declare("djs.Vacation : Model", ["List<djs.propername>"], function(keys, self, p
 
 	"__construct": function(name, places){
 		parent.__construct.apply(this);
-		this[keys.title] = declare.castMember(this, keys.title);
+		this[keys.title] = declare.cast(name, "djs.propername");
 		this[keys.Places] = new cNamesList(places);
 	},
 

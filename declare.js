@@ -106,33 +106,42 @@ declarejs = (function(){
 		return value === undefined ? _else : value;
 	},
 
+
+	templatize = function(type){
+
+		var parts = type.substr(0, type.length-1).split("<");
+		if(parts.length <= 1) missingError(type); // error
+
+		// settings
+		var name = parts[0],
+			template = templates[name],
+			args = parts[1].split(",");
+
+		// exists?
+		if(!template) missingError(type);
+
+		if(template.params.length !== args.length) mismatchError("parameter", name);
+		for(var i=0; i<args.length; i++) args[i] = castParam(args[i], template.params[i], name);
+
+		// call template function (will declare new class)
+		args.unshift(type);
+		template.func.apply({}, args);
+	}
+
 	cast = function(value, type){
-		if(casters[type]) return casters[type](value); // declared datatype?
+		if(casters[type]) return casters[type](value); // casters[type](value, casters[parents[type]]); // declared datatype?
 		if(typeof(type) === C_FUNCTION) return (value instanceof type) ? value : undefined; // class function?
 		if(window[type]){ // native class?
 			casters[type] = function(value){
 				if(value instanceof window[type]) return value;
 			}
-			return (value instanceof window[type]) ? value : undefined;
+			return casters[type](value);
 		}
-		// template
-		var parts = type.substr(0, type.length-1).split("<");
+		// template?
+		templatize(type);
 
-		// error?
-		if(parts.length <= 1) missingError(type);
-
-		// check name
-		if(debug) checkName(name, true);
-
-		// template...
-		var name = parts[0],
-			template = templates[name],
-			params = parts[1].split(",").unshift(name);
-
-		if(!template) missingError(type);
-		template.func.apply({}, params);
-		if(casters[type]) return casters[type](value);
-		malformedError(type);
+		// should exist now
+		return casters[type] ? casters[type](value) : malformedError(type);
 	},
 
 	templateParts = function(str){
@@ -352,9 +361,8 @@ declarejs = (function(){
 
 		// checks
 		if(debug && userules){
-			checkName(name);
-			if(typeof(parent) !== C_STRING) requiredError("parent", name);
-			if(name.toLowerCase() !== name) malformedError("case", name);
+			checkName(name, true); // check name
+			if(typeof(parent) !== C_STRING) requiredError("parent", name); // parent required
 		}
 
 		// enum?
@@ -383,11 +391,26 @@ declarejs = (function(){
 		makers[name] = maker;
 	},
 
-	checkName = function(name, istemplate){
+	checkName = function(name, isdatatype){
 		if(userules){
-			if(name.split(".").length < 2) requiredError("prefix", name);
+			// spaces?
 			if(name.split(" ").length > 1) malformedError("spaces", name);
-			if((istemplate && (name[0].toLowerCase() !== name[0])) || name[0].toUpperCase() !== name[0]) malformedError("case", name);
+
+			// name parts
+			var parts = name.split("<").shift().split(".");
+			if(parts.length < 2) requiredError("prefix", name);
+			var basename = parts.pop();
+
+			// check case?
+			if(isdatatype !== null){
+
+				// datetype must start with lower case, class must start with
+				if((isdatatype && basename[0].toLowerCase() !== basename[0]) || (!isdatatype && basename[0].toUpperCase() !== basename[0])){
+					malformedError("case", name);
+				}
+			}
+
+
 		}
 	},
 
@@ -404,7 +427,7 @@ declarejs = (function(){
 		// no spaces
 		header = header.split(" ").join("");
 
-		if(debug) checkName(name);
+		if(debug) checkName(name, null);
 
 		// duplicate?
 		if(templates[name]) redeclareError(header);
@@ -421,7 +444,7 @@ declarejs = (function(){
 	castParam = function(value, type, name){
 		switch(type){
 			case "string": case "type": if(value !== "") return value; break; // WIP: need logic for type somewhere else
-			case "boolean": return (value && value !== "" && value !== null) ? true : false;
+			case "boolean": return (value && value !== "" && value !== null);
 			case "integer": 
 				value = parseInt(value);
 				if(!isNaN(value)) return value;
@@ -461,6 +484,9 @@ declarejs = (function(){
 			includes = [],
 			struct = loadStruct(name), // this also appends global structs
 			c = struct.c;
+
+		// check name
+		//if(debug) checkName(name, false);
 
 		// load struct
 		struct.header = header;
@@ -561,27 +587,10 @@ declarejs = (function(){
 		// templatized class?
 		if(!struct.declared){
 
+			// tmeplatize
+			templatize(name);
 
-			// parse name
-			var parts = name.split(">").shift().split("<");
-			if(parts.length < 2) missingError(name); // not a templatized class
-			else if(parts.length > 2) malformedError(name); //
-
-			// settings
-			var tname = parts[0],
-				tparams = parts[1].split(","),
-				template = templates[tname];
-
-			// checks
-			if(!template) missingError(tname + " template");
-			if(template.params.length !== tparams.length) mismatchError("parameter", name);
-			for(var i=0; i<tparams.length; i++) tparams[i] = castParam(tparams[i], template.params[i], name);
-
-			// call template function (will declare new class)
-			tparams.unshift(name);
-			template.func.apply({}, tparams);
-
-			// check for new class declaration
+			// should exist now
 			if(!structs[name] || !structs[name].declared) malformedError(name);
 		}
 
@@ -680,8 +689,8 @@ declarejs = (function(){
 		throw new Error(name);
 	},
 
-	malformedError = function(header){
-		error("malformed", header);
+	malformedError = function(type, desc){
+		error("malformed", desc ? (type + ":" + desc) : type);
 	},
 
 	missingError = function(name){

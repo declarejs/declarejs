@@ -16,11 +16,21 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - No other files required to start
 - Less than 12K!
 
+### Getting started
 ```
 <script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
 <script type="text/javascript">
-var declare = declarejs; // grab global and start coding
-...
+var declare = declarejs; // the global object
+```
+```
+require.config({
+    paths: {
+        declare: "https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js",
+    }
+});
+```
+```
+bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
 
 ## Hello World

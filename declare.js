@@ -49,12 +49,13 @@ declarejs = (function(){
 
 		// create alias
 		var arr = ["this", "make", C_PUBLIC, C_PROTECTED, C_PRIVATE, C_STATIC, C_FINAL, C_SINGLETON, C_ABSTRACT, C_MIXED, C_SCALAR, C_STRING, C_NUMBER, C_INTEGER, C_UNDEFINED, C_BOOLEAN, C_FUNCTION, C_OBJECT, C_TYPE, C_CLASS];
-		aliases["void"] = C_UNDEFINED; // other alias
 		for(var i=0; i<arr.length; i++){
 			var str = arr[i].substr(0, 3);
 			aliases[str] = arr[i];
 		}
 
+		// NOTE: "undefined" datatype has to be added like this
+		datatypes[C_UNDEFINED] = {name: C_UNDEFINED, parent: C_MIXED, func: emptyFunc, value: undefined, hasvalue: true};
 	},
 
 	// --- functions --- //
@@ -67,7 +68,7 @@ declarejs = (function(){
 			}
 		} else if(name === "debug"){
 			debug = !!value; 
-			if(value) console.log("djs: " + version);
+			if(value) console.log("declarejs: " + version);
 		}
 	},
 
@@ -106,11 +107,14 @@ declarejs = (function(){
 		return value === undefined ? _else : value;
 	},
 
+	loadType = function(name){
+		if(!datatypes[name] && !structs[name] && !window[name]) templatize(name);
+	},
 
 	templatize = function(type){
 
 		var parts = type.substr(0, type.length-1).split("<");
-		if(parts.length <= 1) missingError(type); // error
+		if(parts.length <= 1) missingError(type); // not a template
 
 		// settings
 		var name = parts[0],
@@ -120,8 +124,18 @@ declarejs = (function(){
 		// exists?
 		if(!template) missingError(type);
 
-		if(template.params.length !== args.length) mismatchError("parameter", name);
-		for(var i=0; i<args.length; i++) args[i] = castParam(args[i], template.params[i], name);
+		if(template.params.length !== args.length) templateParamError(type);
+		for(var i=0; i<args.length; i++){
+			switch(template.params[i]){
+				case C_TYPE: // fall through
+				case C_STRING: if(!args[i].length) templateParamError(type); break; // WIP: need logic for type somewhere else
+				case C_BOOLEAN: args[i] = (args[i] && args[i] !== "" && args[i] !== null); break;
+				case C_INTEGER: args[i] = parseInt(args[i]); if(isNaN(args[i])) templateParamError(type); break;
+				case C_NUMBER: args[i] = parseFloat(args[i]); if(isNaN(args[i])) templateParamError(type); break;
+				default: templateParamError(type);
+			}
+
+		}
 
 		// call template function (will declare new class)
 		args.unshift(type);
@@ -129,19 +143,17 @@ declarejs = (function(){
 	}
 
 	cast = function(value, type){
-		if(casters[type]) return casters[type](value); // casters[type](value, casters[parents[type]]); // declared datatype?
+		if(casters[type]) return casters[type](value, casters[parents[type]]);
 		if(typeof(type) === C_FUNCTION) return (value instanceof type) ? value : undefined; // class function?
 		if(window[type]){ // native class?
-			casters[type] = function(value){
-				if(value instanceof window[type]) return value;
-			}
+			casters[type] = function(value){if(value instanceof window[type]) return value;}
 			return casters[type](value);
 		}
 		// template?
 		templatize(type);
 
 		// should exist now
-		return casters[type] ? casters[type](value) : malformedError(type);
+		return casters[type] ? casters[type](value, casters[parents[type]]) : malformedError(type);
 	},
 
 	templateParts = function(str){
@@ -338,6 +350,9 @@ declarejs = (function(){
 			struct.keys[name] = member.key; // append keys (keep after generate key)
 		}
 
+		// load member
+		loadType(member.type);
+
 		// attach member
 		if(member[C_STATIC]) c[member.key] = data;
 		else c[member.key] = c.prototype[member.key] = data;
@@ -361,7 +376,7 @@ declarejs = (function(){
 
 		// checks
 		if(debug && userules){
-			checkName(name, true); // check name
+			checkName(name, 1); // check name
 			if(typeof(parent) !== C_STRING) requiredError("parent", name); // parent required
 		}
 
@@ -391,26 +406,27 @@ declarejs = (function(){
 		makers[name] = maker;
 	},
 
-	checkName = function(name, isdatatype){
+	checkName = function(name, casetype){
 		if(userules){
 			// spaces?
 			if(name.split(" ").length > 1) malformedError("spaces", name);
 
-			// name parts
-			var parts = name.split("<").shift().split(".");
-			if(parts.length < 2) requiredError("prefix", name);
-			var basename = parts.pop();
+			// seperate from any possible params
+			name = name.split("<").shift();
 
-			// check case?
-			if(isdatatype !== null){
+			// if no dots and not an internal template, then error
+			var parts = name.split(".");
+			if(parts.length < 2 && !templates[name]) requiredError("prefix", name);
+			
+			// no case checking means template
+			if(casetype){
+				var basename = parts.pop();
 
-				// datetype must start with lower case, class must start with
-				if((isdatatype && basename[0].toLowerCase() !== basename[0]) || (!isdatatype && basename[0].toUpperCase() !== basename[0])){
+				// lowercase is datatype, uppercase is class
+				if((casetype === 1 && basename[0].toLowerCase() !== basename[0]) || (casetype === 2 && basename[0].toUpperCase() !== basename[0])){
 					malformedError("case", name);
 				}
 			}
-
-
 		}
 	},
 
@@ -427,7 +443,7 @@ declarejs = (function(){
 		// no spaces
 		header = header.split(" ").join("");
 
-		if(debug) checkName(name, null);
+		if(debug) checkName(name);
 
 		// duplicate?
 		if(templates[name]) redeclareError(header);
@@ -441,21 +457,6 @@ declarejs = (function(){
 		return parent ? name + "<" + parent + ">" : name;
 	},
 
-	castParam = function(value, type, name){
-		switch(type){
-			case "string": case "type": if(value !== "") return value; break; // WIP: need logic for type somewhere else
-			case "boolean": return (value && value !== "" && value !== null);
-			case "integer": 
-				value = parseInt(value);
-				if(!isNaN(value)) return value;
-			break;
-			case "number": 
-				value = parseFloat(value);
-				if(!isNaN(value)) return value;
-			break;
-		}
-		invalidError("templateParam", type);
-	},
 
 	loadInclude = function(name){
 		return window[name] || loadStruct(name).c;
@@ -486,7 +487,7 @@ declarejs = (function(){
 			c = struct.c;
 
 		// check name
-		//if(debug) checkName(name, false);
+		if(debug) checkName(name, 2);
 
 		// load struct
 		struct.header = header;
@@ -697,8 +698,8 @@ declarejs = (function(){
 		error("missing", name);
 	},
 
-	missingPrefixError = function(header){
-		error("missingPrefix", header);
+	templateParamError = function(name){
+		error("tplParam", name);
 	},
 
 	redeclareError = function(header){
@@ -970,6 +971,8 @@ declarejs = (function(){
 		return value;
 	}),
 
+	// datatype(C_UNDEFINED, C_MIXED, emptyFunc), // KEEP: this had to be added in init() to avoid errors
+
 	datatype(C_SCALAR, C_MIXED, function(value){
 		if(scalars[typeof(value)]) return value;
 	}, ""),
@@ -1010,6 +1013,10 @@ declarejs = (function(){
 	}, function(){ // custom maker
 		return {};
 	}),
+
+	//datatype("null", C_OBJECT, function(value){
+	//	if(value === null) return value;
+	//}),
 
 	datatype(C_FUNCTION, C_MIXED, function(value){
 		if(typeof(value) === "function") return value;
@@ -1106,6 +1113,7 @@ declarejs = (function(){
 	declare.parentName = parentName;
 	declare.parentClass = parentClass;
 	declare.debug = function(){return debug;}; // no direct access to this
+	declare.version = function(){return version;}; // no direct access to this
 	if(debug) declare.inspect = inspect; // internal use only
 	return declare;
 

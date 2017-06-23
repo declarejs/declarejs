@@ -169,13 +169,14 @@ declarejs = (function(){
 		return strict ? (value === cast(value, type)) : (value == cast(value, type));
 	},
 
-	make = function(type, args){
+	make = function(type){
 		//if(debug && args !== undefined && !(args instanceof Array)) error("badParam: " + type);
-		if(args === undefined) args = [];
-		else if(!(args instanceof Array)) args = [args]; // --- WIP
-		
-		if(makers[type]) return makers[type](type, args);
-		if(window[type]) return makeArgs(window[type], args || []);
+
+		if(makers[type]) return makers[type].apply(this, arguments); // "this" is just filler and doesn't mean anything
+		if(window[type]){
+			nativetype(type);
+			return makers[type](type, arguments);
+		}
 		missingError(type);
 	},
 
@@ -187,18 +188,22 @@ declarejs = (function(){
 	},
 
 	makeClass = function(type, args){
-		return singles[type] || makeArgs(get(type), args);
+		return singles[type] || makeOffset(get(type), args, 1);
 	},
 
-	makeArgs = function(c, args){
-		switch(args.length){
+	makeApply = function(c, arr){ // public
+		return makeOffset(c, arr, 0);
+	},
+
+	makeOffset = function(c, args, i){ // internal only
+		switch(args.length-i){
 			case 0: return new c();
-			case 1: return new c(args[0]);
-			case 2: return new c(args[0], args[1]);
-			case 3: return new c(args[0], args[1], args[2]);
-			case 4: return new c(args[0], args[1], args[2], args[3]);
+			case 1: return new c(args[i]);
+			case 2: return new c(args[i], args[i+1]);
+			case 3: return new c(args[i], args[i+1], args[i+2]);
+			case 4: return new c(args[i], args[i+1], args[i+2], args[i+3]);
 		}
-		return new c(args[0], args[1], args[2], args[3], args[4]);
+		return new c(args[i], args[i+1], args[i+2], args[i+3], args[i+4]);
 	},
 
 	compile = function(){
@@ -371,7 +376,7 @@ declarejs = (function(){
 		if(!c) missingError(name);
 		casters[name] = function(value){if(value instanceof c) return value;};
 		parents[name] = C_OBJECT;
-		makers[name] = makeArgs;
+		makers[name] = makeClass;
 	},
 
 	datatype = function(name, parent, mixed, value){
@@ -379,7 +384,7 @@ declarejs = (function(){
 			maker = makeDatatype;
 
 		// duplicate?
-		if(datatypes[name]) redeclareError(name);
+		if(datatypes[name]) duplicateError(name);
 		
 		// maker?
 		if(typeof(value) === "function"){
@@ -459,7 +464,7 @@ declarejs = (function(){
 		if(debug) checkName(name);
 
 		// duplicate?
-		if(templates[name]) redeclareError(header);
+		if(templates[name]) duplicateError(header);
 
 		// append global templates
 		templates[name] = {name: name, params: parts[1].split(","), func: func};
@@ -500,6 +505,7 @@ declarejs = (function(){
 			c = struct.c;
 
 		// check name
+		if(makers[name]) duplicateError(name);
 		if(debug) checkName(name, 2);
 
 		// load struct
@@ -715,8 +721,8 @@ declarejs = (function(){
 		error("tplParam", name);
 	},
 
-	redeclareError = function(header){
-		violationError("naming", "duplicate: " + header);
+	duplicateError = function(header){
+		error("duplicate", header);
 	},
 
 	violationError = function(prefix, desc){
@@ -1114,6 +1120,7 @@ declarejs = (function(){
 	declare.load = load;
 	declare.fill = fill;
 	declare.make = make;
+	declare.makeApply = makeApply;
 	declare.warning = warning;
 	declare.error = error;
 	declare.compile = compile;

@@ -108,7 +108,10 @@ declarejs = (function(){
 	},
 
 	loadType = function(name){
-		if(!datatypes[name] && !structs[name] && !window[name]) templatize(name);
+		if(!datatypes[name] && !structs[name]){
+			if(window[name]) nativetype(name);
+			else templatize(name);
+		}
 	},
 
 	templatize = function(type){
@@ -145,14 +148,15 @@ declarejs = (function(){
 	cast = function(value, type){
 		if(casters[type]) return casters[type](value, casters[parents[type]]);
 		if(typeof(type) === C_FUNCTION) return (value instanceof type) ? value : undefined; // class function?
-		if(window[type]){ // native class?
-			casters[type] = function(value){if(value instanceof window[type]) return value;}
+
+		// native type?
+		if(window[type]){
+			nativetype(type);
 			return casters[type](value);
 		}
-		// template?
-		templatize(type);
 
-		// should exist now
+		// from template
+		templatize(type);
 		return casters[type] ? casters[type](value, casters[parents[type]]) : malformedError(type);
 	},
 
@@ -166,11 +170,12 @@ declarejs = (function(){
 	},
 
 	make = function(type, args){
+		//if(debug && args !== undefined && !(args instanceof Array)) error("badParam: " + type);
 		if(args === undefined) args = [];
 		else if(!(args instanceof Array)) args = [args]; // --- WIP
 		
 		if(makers[type]) return makers[type](type, args);
-		if(window[type]) return makeArgs(window[type], args);
+		if(window[type]) return makeArgs(window[type], args || []);
 		missingError(type);
 	},
 
@@ -359,6 +364,14 @@ declarejs = (function(){
 
 		// append struct members
 		struct.members[name] = struct.members_new[name] = member;
+	},
+
+	nativetype = function(name, func){
+		var c = window[name];
+		if(!c) missingError(name);
+		casters[name] = function(value){if(value instanceof c) return value;};
+		parents[name] = C_OBJECT;
+		makers[name] = makeArgs;
 	},
 
 	datatype = function(name, parent, mixed, value){

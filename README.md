@@ -33,8 +33,8 @@ require.config({
 bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
 ---
-
-## Hello World
+# Examples
+### Hello World
 ```javascript
 var cPerson = declare("djs.Person", function(keys, self){return {
 
@@ -54,7 +54,7 @@ var Person = new cPerson("Hello World");
 console.log(Person.speak()); 	// "My name is Hello World"
 ```
 
-## Classes and members
+### Classes and members
 ```javascript
 declare("abstract djs.Animal", function(keys, self){return {
 
@@ -109,7 +109,7 @@ console.log(c.Jeff().speak()); 	// "I'm Jeff"  (no "new" for singletons)
 console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff"
 ```
 
-## Datatypes and templates
+### Datatypes and templates
 ```javascript
 declare.datatype("djs.propername", "string", function(value, parent){
 

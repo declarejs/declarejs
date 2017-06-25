@@ -143,7 +143,7 @@ declarejs = (function(){
 		// call template function (will declare new class)
 		args.unshift(type);
 		template.func.apply({}, args);
-	}
+	},
 
 	cast = function(value, type){
 		if(casters[type]) return casters[type](value, casters[parents[type]]);
@@ -169,13 +169,13 @@ declarejs = (function(){
 		return strict ? (value === cast(value, type)) : (value == cast(value, type));
 	},
 
-	make = function(type){
-		//if(debug && args !== undefined && !(args instanceof Array)) error("badParam: " + type);
+	// makes
 
+	make = function(type){
 		if(makers[type]) return makers[type].apply(this, arguments); // "this" is just filler and doesn't mean anything
 		if(window[type]){
 			nativetype(type);
-			return makers[type](type, arguments);
+			return make(type);
 		}
 		missingError(type);
 	},
@@ -188,14 +188,18 @@ declarejs = (function(){
 	},
 
 	makeClass = function(type, args){
-		return singles[type] || makeOffset(get(type), args, 1);
+		return singles[type] || makeHelper(get(type), args, 1);
+	},
+
+	makeSingleton = function(type, args){
+		return singles[type] || makeHelper(get(type), args, 1);
 	},
 
 	makeApply = function(c, arr){ // public
-		return makeOffset(c, arr, 0);
+		return makeHelper(c, arr, 0);
 	},
 
-	makeOffset = function(c, args, i){ // internal only
+	makeHelper = function(c, args, i){ // internal only
 		switch(args.length-i){
 			case 0: return new c();
 			case 1: return new c(args[i]);
@@ -205,6 +209,8 @@ declarejs = (function(){
 		}
 		return new c(args[i], args[i+1], args[i+2], args[i+3], args[i+4]);
 	},
+
+	// END makes
 
 	compile = function(){
 		if(!compiles.length || compiling) return;
@@ -572,17 +578,18 @@ declarejs = (function(){
 		}
 
 
-		// constructor
+		// constructors and makers
 		if(struct[C_ABSTRACT]){
-			c.prototype.__realconstruct = function(){error(C_ABSTRACT + "Instance", name);}
+			c.prototype.__realconstruct = makers[name] = function(){error(C_ABSTRACT + "Instance", name);}
 		} else if(struct[C_SINGLETON]) {
+			makers[name] = makeSingleton;
 			c.prototype.__realconstruct = function(){
 				assemble(name);
 				return singles[name] || makeArgs(c, arguments);
 			}
 		} else {
-			// auto-assemble here, overridden in the assemble function
-			c.prototype.__realconstruct = function(){
+			makers[name] = makeClass;
+			c.prototype.__realconstruct = function(){ // overridden in the assemble function
 				assemble(name);
 				this.__construct.apply(this, arguments);
 			}
@@ -591,9 +598,6 @@ declarejs = (function(){
 		// extras
 		c.__class = name;
 		c.__parent = parentname;
-
-		// append makers
-		makers[name] = makeClass;
 		
 		// return class
 		return c;

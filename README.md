@@ -144,10 +144,38 @@ console.log(RoadTrip.description());
 ---
 ## Globals
 
-These are functions and data members that can be accessed via the global declarejs object.
+These are functions and data members that can be accessed via the global declarejs object. *declarejs.cast("50%", "integer")*
 
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
-| template() | **name**:string, **paramtype**:string, [**paramtype2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime. |
+| template() | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  Allowed values for *type1, type2, ...*: string, type, integer, number. See examples. |
+| datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. Name prefixing is required: *khw.Widget* |
+| cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
+| mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined* is returned. |
+| valid() | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted as non-undefined. |
+| get() | **classname**:string | class | Gets the requested class. |
+---
 
+## Classes
+
+### Base
+
+Abstract - Takes care of some basic functionality like setting and getting data members.
+
+| Method | Parameters | Returns | Description |
+| ----- | ----- | ----- | ----- |
+| __construct() | [**values**:object] | *this* | Pass in any initial values. |
+| has() | **name**:string | boolean | Returns true if member exists and is non-undefined. |
+| set() | **name**:string, **value**:mixed | *this* | Will set a member if it exists otherwise an error is thrown. |
+| get() | **name**:string | mixed | Will return a value if the member exists otherwise an error is thrown. |
+| props() | [**values**:object] | object\|*this* | Set and get multiple members depending on which parameter gets passed. |
+
+### Model
+
+Extends **Base** \| Abstract - A class that serves to hold a value or values.
+
+| Method | Parameters | Returns | Description |
+| ----- | ----- | ----- | ----- |
+| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
+| *see Base* | 
 

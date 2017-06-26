@@ -145,8 +145,8 @@ console.log(RoadTrip.description());
 ## Functions
 | Name | Parameters | Description  |
 | ----- | ----- | ----- |
-| template | **name**:string, **paramtype...**:mixed, [paramtype2...], **handler**:function | Generate datatypes and classes dynamically by passing parameters during runtime. |
-| datatype | **name**:string, **parent**:string, **handler**:function | Create a new datatype.  Name prefixing is required: *khw.Widget* |
+| template | **name**:string, **paramtype**:string, [**paramtype2**:string...], **handler**:function | **return**:undefined. Generate datatypes and classes dynamically by passing parameters during runtime. |
+| datatype | **name**:string, **parent**:string, **handler**:function | **return**:undefined. Create a new datatype.  Name prefixing is required: *khw.Widget* |
 
 
 

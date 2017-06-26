@@ -143,7 +143,7 @@ console.log(RoadTrip.description());
 ```
 ---
 ## Globals
-These are functions and data members that can be accessed via the global declarejs object.  Example: *declarejs.cast("50%", "integer")*
+These are functions and data members that can be accessed via the global declarejs object.
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
 | template() | **name**:string, **paramtype**:string, [**paramtype2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime. |
@@ -151,4 +151,5 @@ These are functions and data members that can be accessed via the global declare
 | cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
 | mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined* is returned. |
 | valid() | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted as non-undefined. |
+| get() | **classname**:string | class | Gets the requested class. |
 

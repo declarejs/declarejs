@@ -143,10 +143,10 @@ console.log(RoadTrip.description());
 ```
 ---
 ## Functions
-| Name | Parameters | Description  |
+| Name | Parameters | Returns | Description  |
 | ----- | ----- | ----- |
-| template | **name**:string, **paramtype**:string, [**paramtype2**:string...], **handler**:function | **return**:undefined. Generate datatypes and classes dynamically by passing parameters during runtime. |
-| datatype | **name**:string, **parent**:string, **handler**:function | **return**:undefined. Create a new datatype.  Name prefixing is required: *khw.Widget* |
+| template | **name**:string, **paramtype**:string, [**paramtype2**:string...], **handler**:function | none | Generate datatypes and classes dynamically by passing parameters during runtime. |
+| datatype | **name**:string, **parent**:string, **handler**:function | **age**:integer | Create a new datatype.  Name prefixing is required: *khw.Widget* |
 
 
 

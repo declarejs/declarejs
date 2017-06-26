@@ -177,5 +177,25 @@ Extends **Base** \| Abstract - A class that serves to hold a value or values.
 | Method | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| *see Base* | 
+| ... | | | See *Base* |
+
+
+### Data
+
+Extends **Model** \| Abstract - A class that holds a single value.
+
+| Method | Parameters | Returns | Description |
+| ----- | ----- | ----- | ----- |
+| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
+| ... | | | See *Model* |
+
+
+### Model<type>
+
+Extends **Data** \| Parameterized - A parameterized class that takes a datatype or class name.
+
+| Method | Parameters | Returns | Description |
+| ----- | ----- | ----- | ----- |
+| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
+| ... | | | See *Base* |
 

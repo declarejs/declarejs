@@ -143,7 +143,9 @@ console.log(RoadTrip.description());
 ```
 ---
 ## Globals
+
 These are functions and data members that can be accessed via the global declarejs object.
+
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
 | template() | **name**:string, **paramtype**:string, [**paramtype2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime. |

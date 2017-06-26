@@ -5,7 +5,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - Abstract classes and singletons
 - Ideal for modular code using Requirejs
 
-##### Benefits
+#### Benefits
 - Clean, readable syntax
 - Class templates to minimize redundancy
 - User-defined datatypes
@@ -37,12 +37,12 @@ bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 
 These are accessed via the global declarejs object.
 ```javascript
-var n = declare.cast("50%", "integer")
+var n = declare.cast("50%", "integer");
 ```
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
-| template() | *name*:string, *type1*:string, [*type2*:string...], *handler*:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  Allowed values for *type1, type2, ...*: string, type, integer, number. See examples. |
-| datatype() | *name*:string, *parent*:datatype, *handler*:function | integer | Create a new datatype. Name prefixing is required: *khw.Widget* |
+| template() | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  Allowed values for *type1, type2, ...*: string, type, integer, number. See examples. |
+| datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. Name prefixing is required: *khw.Widget* |
 | cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
 | mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined* is returned. |
 | valid() | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted as non-undefined. |
@@ -51,7 +51,7 @@ var n = declare.cast("50%", "integer")
 
 # Classes
 
-#### Base
+### Base
 
 Abstract - Takes care of some basic functionality like setting and getting data members.
 
@@ -63,7 +63,7 @@ Abstract - Takes care of some basic functionality like setting and getting data 
 | get() | **name**:string | mixed | Will return a value if the member exists otherwise an error is thrown. |
 | props() | [**values**:object] | object\|*this* | Set and get multiple members depending on which parameter gets passed. |
 
-#### Model
+### Model
 
 Extends **Base** \| Abstract - A class that serves to hold a value or values.
 
@@ -73,7 +73,7 @@ Extends **Base** \| Abstract - A class that serves to hold a value or values.
 | ... | | | See *Base* |
 
 
-#### Data
+### Data
 
 Extends **Model** \| Abstract - A class that holds a single value.
 
@@ -83,9 +83,9 @@ Extends **Model** \| Abstract - A class that holds a single value.
 | ... | | | See *Model* |
 
 # Templates
-### Model<name:type>
+### Model\<name:type\>
 
-Extends **Model<parenttype>** \| A class that takes a datatype or class name.  It dynamically extends the generated class using the parent of the type parameter.
+Extends **Model\<parenttype\>** \| A class that takes a datatype or class name.  It dynamically extends the generated class using the parent of the type parameter.
 
 | Method | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
@@ -96,7 +96,7 @@ Extends **Model<parenttype>** \| A class that takes a datatype or class name.  I
 
 
 # Samples
-##### Hello World
+#### Hello World
 ```javascript
 var cPerson = declare("djs.Person", function(keys, self){return {
 
@@ -116,7 +116,7 @@ var Person = new cPerson("Hello World");
 console.log(Person.speak()); 	// "My name is Hello World"
 ```
 
-##### Classes and Members
+#### Classes and Members
 ```javascript
 declare("abstract djs.Animal", function(keys, self){return {
 
@@ -171,7 +171,7 @@ console.log(c.Jeff().speak()); 	// "I'm Jeff"  (no "new" for singletons)
 console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff"
 ```
 
-##### Datatypes and Templates
+#### Datatypes and Templates
 ```javascript
 declare.datatype("djs.propername", "string", function(value, parent){
 

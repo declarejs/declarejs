@@ -5,7 +5,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - Abstract classes and singletons
 - Ideal for modular code using Requirejs
 
-#### Benefits
+**Benefits**
 - Clean, readable syntax
 - Class templates to minimize redundancy
 - User-defined datatypes
@@ -20,7 +20,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 ```
 <script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
 <script type="text/javascript">
-var declare = declarejs; // the global object
+var declare = declarejs; // the global
 ```
 ```
 require.config({
@@ -32,28 +32,66 @@ require.config({
 ```
 bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
-
-# Functions
-
-These are accessed via the global declarejs object.
+**Hello World**
 ```javascript
-var n = declare.cast("50%", "integer");
+var cPerson = declare("djs.Person", function(keys, self){return {
+
+	"protected string name": "",
+	"protected integer age": 0,
+
+	"__construct": function(name, age){
+		this[keys.name] = declare.cast(name, "string");
+		this[keys.age] = declare.cast(name, "integer");
+	},
+	
+	"string speak": function(){
+		return "My name is " + this[keys.name] + " and I'm " + this[keys.age];
+	}
+	
+}});
+
+var Person = new cPerson("Hello World");
+console.log(Person.speak()); 	// "My name is Hello World"
 ```
+# Declaring
+Use the global function to declare classes and define it's members. 
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
-| template() | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  Allowed values for *type1, type2, ...*: string, type, integer, number. See examples. |
-| datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. Name prefixing is required: *khw.Widget* |
-| cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
-| mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined* is returned. |
-| valid() | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted as non-undefined. |
-| get() | **classname**:string | class | Gets the requested class. |
+| declarejs() | **header**:string, [**includes**:Array], **handler**:function | class | Define classes using this function. **Note:** Class name must be prefixed and have uppercase first char like "khw.FormControl".|
+**Header**
+```
+"abstract singleton khw.SomeClass : khw.ParentClass"
+```
+**Includes** *(optional)*
+```
+["khw.IncludeClass", "khw.IncludeClass2"]
+```
+**Handler**
+```
+function(keys, SomeClass, ParentClass, [IncludeClass, IncludeClass2, ...]){}
+```
+# Functions
+
+These functions are accessed via the global *declarejs* function.
+```javascript
+var n = declarejs.cast("50%", "integer");
+```
+| Functions | Parameters | Returns | Description |
+| ----- | ----- | ----- | ----- |
+| template | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "type", "integer", "number". |
+| datatype | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like "khw.emailAddress" |
+| cast | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
+| mustCast | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
+| valid | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted to a defined value. |
+| get | **classname**:string | class | Gets the requested class. |
 
 
 # Classes
+Some built-in classes that will be the foundation for your library.
 
 ### Base
 
-Abstract - Takes care of some basic functionality like setting and getting data members.
+`abstract Base` - Takes care of some basic functionality like accessing object properties.
 
 | Method | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
@@ -65,17 +103,19 @@ Abstract - Takes care of some basic functionality like setting and getting data 
 
 ### Model
 
-Extends **Base** \| Abstract - A class that serves to hold a value or values.
+`abstract Model : Base` - A class that serves to hold a value or values.
 
 | Method | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| ... | | | See *Base* |
+| | | | *more in Base...* |
+| **Property** | **Type** |  | **Description** |
+| values | object | 
 
 
 ### Data
 
-Extends **Model** \| Abstract - A class that holds a single value.
+`abstract Data : Model` - A class that holds a single value.
 
 | Method | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
@@ -83,9 +123,10 @@ Extends **Model** \| Abstract - A class that holds a single value.
 | ... | | | See *Model* |
 
 # Templates
-### Model\<name:type\>
+### Model\<type\>
 
-Extends **Model\<parenttype\>** \| A class that takes a datatype or class name.  It dynamically extends the generated class using the parent of the type parameter.
+Model<type:string> : Model<type_parent> - A class that takes a datatype or class name.  
+It dynamically extends the generated class using the parent of the type parameter.
 
 | Method | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
@@ -96,27 +137,8 @@ Extends **Model\<parenttype\>** \| A class that takes a datatype or class name. 
 
 
 # Samples
-#### Hello World
-```javascript
-var cPerson = declare("djs.Person", function(keys, self){return {
 
-	"protected string name": "",
-
-	"__construct": function(name){
-		this[keys.name] = declare.cast(name, "string");
-	},
-	
-	"string speak": function(){
-		return "My name is " + this[keys.name];
-	}
-	
-}});
-
-var Person = new cPerson("Hello World");
-console.log(Person.speak()); 	// "My name is Hello World"
-```
-
-#### Classes and Members
+**Classes and Members**
 ```javascript
 declare("abstract djs.Animal", function(keys, self){return {
 
@@ -171,7 +193,7 @@ console.log(c.Jeff().speak()); 	// "I'm Jeff"  (no "new" for singletons)
 console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff"
 ```
 
-#### Datatypes and Templates
+**Datatypes and Templates**
 ```javascript
 declare.datatype("djs.propername", "string", function(value, parent){
 

@@ -16,7 +16,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - No other files required to start
 - Less than 12K!
 
-# Starting
+# Start
 ```
 <script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
 <script type="text/javascript">
@@ -65,13 +65,17 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 The global function that serves as the basis for everything in Declarejs.  It has a dual purpose, to create classes and hold other built-in functions (see *Functions* below).
 
 | Name | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
+| :----- | :----- | :----- | :----- |
 | declarejs() | **header**:string, [**includes**:Array], **handler**:function | class | Define classes using this function. **Note:** Class name must be prefixed and have uppercase first char like "khw.FormControl".|
 
 **Header** - String. Declare your class options and parent class.
-`"(abstract) (singleton) prefix.ClassName ( : prefix.ParentName)"`
+```
+"(abstract) (singleton) my.lib.ClassName ( : prefix.ParentName)"
+```
 **Includes** - Array (optional). Pass in both user-defined classes and native javascript classes.
-`["prefix.UserDefinedClass", "NativeClass"]`
+```
+["my.lib.UserDefinedClass", "NativeClass", ...]
+```
 **Handler** - Function. Define class members and access included classes. Return new members as a simple object.
 ```
 function(keys, cSelf, cParent, cInclude1, cInclude2, ...){return {
@@ -86,7 +90,7 @@ These functions are attached to the *declarejs* global function.
 var n = declarejs.cast("50%", "integer");
 ```
 | Functions | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
+| :----- | :----- | :----- | :----- |
 | template | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
 | datatype | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like "app.emailAddress" |
 | cast | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
@@ -100,10 +104,10 @@ Some helpful classes that can be used as the foundation for your library.
 
 ### Base
 
-`abstract Base` - Takes care of some basic functionality like accessing object properties.
+Abstract. Takes care of some basic functionality like accessing object properties.
 
 | Method | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
+| :----- | :----- | :----- | :----- |
 | __construct() | [**values**:object] | *this* | Pass in any initial values. |
 | has() | **name**:string | boolean | Returns true if member exists and is non-undefined. |
 | set() | **name**:string, **value**:mixed | *this* | Will set a member if it exists otherwise an error is thrown. |
@@ -112,35 +116,42 @@ Some helpful classes that can be used as the foundation for your library.
 
 ### Model
 
-`abstract Model : Base` - A class that serves to hold a value or values.
+Abstract. A class that serves to hold a value or values.
+
+*Model / Base*
 
 | Method | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
+| :----- | :----- | :----- | :----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| | | | *more in Base...* |
+| | | | *more in parent...* |
 | **Property** | **Type** |  | **Description** |
 | values | object | 
 
 
 ### Model\<type\>
 
-Model<string> : ...Data - A parameterized class that takes a datatype or class name. This will determine which type of value the model will hold.
-It dynamically extends the generated class using the parent of the type parameter.
+Parameterized.  A class that takes a datatype or class name. This will determine which type of value the model will hold.
+Parent class is dynamically generated based on the parameter.
+
+**Parameters**: type:string<br/>
+**Hierarchy**: *Model\<type\> / Model\<...\> / Data / Model / Base*
 
 | Method | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
-| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| ... | | | See *Base* |
+| :----- | :----- | :----- | :----- |
+| each | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
+| | | | *more in parent...* |
 
 
 ### Data
 
-`abstract Data : Model` - A class that holds a single value.
+Abstract. A class that holds a single value.
+
+*Data / Model / Base*
 
 | Method | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
+| :----- | :----- | :----- | :----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| ... | | | See *Model* |
+| | | | *more in parent...* |
 
 
 

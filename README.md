@@ -34,30 +34,41 @@ bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
 **Hello World**
 ```javascript
-var cPerson = declare("djs.Person", function(keys, self){return {
-
-	"protected string name": "",
-	"protected integer age": 0,
-
-	"__construct": function(name, age){
-		this[keys.name] = declare.cast(name, "string");
-		this[keys.age] = declare.cast(name, "integer");
-	},
+declare("abstract djs.Thing", function(keys, self){return {
 	
+	"protected string name": "",
+
+	"__construct": function(name){
+		this[keys.name] = declare.cast(name, "string");
+	},
+
 	"string speak": function(){
-		return "My name is " + this[keys.name] + " and I'm " + this[keys.age];
+		return this[keys.name];
 	}
 	
 }});
 
-var Person = new cPerson("Hello World");
-console.log(Person.speak()); 	// "My name is Hello World"
+declare("djs.Person : djs.Thing", function(keys, self, parent){return {
+
+	
+	"speak": function(){ // string type implied
+		return  + "Hello world! I'm " + parent.speak.call(this);
+	}
+	
+}});
+
+var cPerson = declare.classes("djs.Person");
+var Joe = new cPerson("Joe");
+console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 ```
 # Declaring
+
 Use the global function to declare classes and define it's members. 
+
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
 | declarejs() | **header**:string, [**includes**:Array], **handler**:function | class | Define classes using this function. **Note:** Class name must be prefixed and have uppercase first char like "khw.FormControl".|
+
 **Header**
 ```
 "abstract singleton khw.SomeClass : khw.ParentClass"

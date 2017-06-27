@@ -34,25 +34,24 @@ bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
 **Hello World**
 ```javascript
-declare("abstract djs.Thing", function(keys, self){return {
+declare("abstract app.Hello", function(keys, cSelf, cParent){return {
 	
-	"protected string name": "",
-
-	"__construct": function(name){
-		this[keys.name] = declare.cast(name, "string");
-	},
-
-	"string speak": function(){
-		return this[keys.name];
+	"string speak": function(){ // public by default
+		return "Hello";
 	}
 	
 }});
 
-declare("djs.Person : djs.Thing", function(keys, self, parent){return {
+declare("app.World : app.Hello", function(keys, cSelf, cParent){return {
 
+	"protected string name": "nobody", 	// shorthand is "pro str name"
+
+	"__construct": function(name){
+		if(name) declare.set(this, keys.name);
+	},
 	
 	"speak": function(){ // string type implied
-		return  + "Hello world! I'm " + parent.speak.call(this);
+		return cParent.speak.call(this) + " World! I'm " + this[keys.name];
 	}
 	
 }});
@@ -61,36 +60,35 @@ var cPerson = declare.classes("djs.Person");
 var Joe = new cPerson("Joe");
 console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 ```
-# Declaring
+# Module
 
-Use the global function to declare classes and define it's members. 
+The global function that serves as the basis for everything in Declarejs.  It has a dual purpose, to create classes and hold other built-in functions (see *Functions* below).
 
 | Name | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
 | declarejs() | **header**:string, [**includes**:Array], **handler**:function | class | Define classes using this function. **Note:** Class name must be prefixed and have uppercase first char like "khw.FormControl".|
 
-**Header**
+**Header** - String. Declare your class options and parent class.
+`"(abstract) (singleton) prefix.ClassName ( : prefix.ParentName)"`
+**Includes** - Array (optional). Pass in both user-defined classes and native javascript classes.
+`["prefix.UserDefinedClass", "NativeClass"]`
+**Handler** - Function. Define class members and access included classes. Return new members as a simple object.
 ```
-"abstract singleton khw.SomeClass : khw.ParentClass"
-```
-**Includes** *(optional)*
-```
-["khw.IncludeClass", "khw.IncludeClass2"]
-```
-**Handler**
-```
-function(keys, SomeClass, ParentClass, [IncludeClass, IncludeClass2, ...]){}
+function(keys, cSelf, cParent, cInclude1, cInclude2, ...){return {
+	"(static) (access) (type) property": "somevalue", 	// access is "public" by default but can be "private" or "protected"
+	"(final) (static) (access) (type) methodName": function(){},	// no type means inherit from parent or "mixed" if no parent
+}}
 ```
 # Functions
 
-These functions are accessed via the global *declarejs* function.
+These functions are attached to the *declarejs* global function.
 ```javascript
 var n = declarejs.cast("50%", "integer");
 ```
 | Functions | Parameters | Returns | Description |
 | ----- | ----- | ----- | ----- |
-| template | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "type", "integer", "number". |
-| datatype | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like "khw.emailAddress" |
+| template | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
+| datatype | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like "app.emailAddress" |
 | cast | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
 | mustCast | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
 | valid | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted to a defined value. |
@@ -98,7 +96,7 @@ var n = declarejs.cast("50%", "integer");
 
 
 # Classes
-Some built-in classes that will be the foundation for your library.
+Some helpful classes that can be used as the foundation for your library.
 
 ### Base
 
@@ -124,6 +122,17 @@ Some built-in classes that will be the foundation for your library.
 | values | object | 
 
 
+### Model\<type\>
+
+Model<string> : ...Data - A parameterized class that takes a datatype or class name. This will determine which type of value the model will hold.
+It dynamically extends the generated class using the parent of the type parameter.
+
+| Method | Parameters | Returns | Description |
+| ----- | ----- | ----- | ----- |
+| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
+| ... | | | See *Base* |
+
+
 ### Data
 
 `abstract Data : Model` - A class that holds a single value.
@@ -132,17 +141,6 @@ Some built-in classes that will be the foundation for your library.
 | ----- | ----- | ----- | ----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
 | ... | | | See *Model* |
-
-# Templates
-### Model\<type\>
-
-Model<type:string> : Model<type_parent> - A class that takes a datatype or class name.  
-It dynamically extends the generated class using the parent of the type parameter.
-
-| Method | Parameters | Returns | Description |
-| ----- | ----- | ----- | ----- |
-| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| ... | | | See *Base* |
 
 
 

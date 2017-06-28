@@ -62,9 +62,48 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 ```
 
 
-# Module
+# Declaring
 
-The global function that serves as the basis for everything in Declarejs.  It has a dual purpose, to create classes and to hold built-in functions (see *Functions*).
+Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.  Below will explain the diffent aspects of this function.
+
+```
+declarejs(header:string, [includes:Array], handler:function):class
+```
+
+| Parameter | Type | Description |
+| :----- | :----- | :----- |
+| header | string | Declare your class options and parent class. |
+| includes | Array | Optional. Pass in both user-defined classes and native javascript classes. |
+| handler | function | Define class members and access included classes. Return new members as a simple object. |
+
+**The Declaration Handler**
+
+```
+function(keys:object, self:class, [parent:class], [include:class], ...):object // returns the members
+```
+
+| Parameter | Type | Description |
+| :----- | :----- | :----- |
+| keys | object | Holds the names of each class member. See *How Protecting Works*. |
+| self | class | The constructor function of the class that is being declared. |
+| parent | class | Optional. The constructor function of the parent class. |
+| include | class | Optional. The constructor function of the parent class. |
+
+**How Protecting Works**
+
+It must be stated in the begining that member protection is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still a power aspect to Declarejs and here is how it work:  When a member is labeled *protected* or *private* the name will subsequently be obfuscated. The member names, obfuscated or othewise, are stored on an object that gets passed to the class declaration handler.  **Note:** It is important not to pass the *keys* to any outside functions or objects.
+
+```
+...
+console.log(keys); 			// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
+this[keys.secret] = "some"; // protected property
+this[keys.whisper](); 		// protected method
+this[keys.speak](); 		// public method
+this.speak(); 				// also works
+this.whisper();				// ERROR!
+```
+
+**Structure**
 
 ```javascript
 declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
@@ -77,14 +116,6 @@ var cSomeClass = declarejs.classes("lib.SomeClass"); // access built-in function
 var SomeObject = new cSomeClass();
 
 ```
-**Parameters**
-
-| Parameter | Type | Description |
-| :----- | :----- | :----- |
-| header | string | Declare your class options and parent class. |
-| includes | Array | Optional. Pass in both user-defined classes and native javascript classes. |
-| handler | function | Define class members and access included classes. Return new members as a simple object. |
-
 **Class Options**
 
 | Option | Description |
@@ -175,7 +206,7 @@ Parent class is dynamically generated based on the parameter.
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| each | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
+| each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
 | | | | *more in parent...* |
 
 

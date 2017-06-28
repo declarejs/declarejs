@@ -79,10 +79,17 @@ The global function that serves as the basis for everything in Declarejs.  It ha
 **Handler** - Function. Define class members and access included classes. Return new members as a simple object.
 ```
 function(keys, cSelf, cParent, cInclude1, cInclude2, ...){return {
-	"(static) (access) (type) property": "somevalue", 	// access is "public" by default but can be "private" or "protected"
-	"(final) (static) (access) (type) methodName": function(){},	// no type means inherit from parent or "mixed" if no parent
+	"(options) (type) property": "somevalue", 	// access is "public" by default but can be "private" or "protected"
+	"(options) (type) methodName": function(){},	// no type means inherit from parent or "mixed" if no parent
 }}
 ```
+**Member Options**
+| Option | Member | Description |
+| :----- | :----- | :----- |
+| public | data, method | Accessable outside and outside the instance. The default access type. |
+| protected | data, method | Accessable within the instance only. |
+| private | data, method | Accessable within the instance of a specified class only. |
+
 # Functions
 
 These functions are attached to the *declarejs* global function.

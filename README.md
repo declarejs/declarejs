@@ -67,13 +67,13 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 The global function that serves as the basis for everything in Declarejs.  It has a dual purpose, to create classes and to hold built-in functions (see *Functions*).
 
 ```javascript
-declarejs("(options) lib.Name : (parent)", (included...), function(keys, cSelf, cParent, ...){return {
+declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
 
-	"(options) (type) propName": "somevalue",
+	"(options) (type) propName": "value",
 	"(options) (type) methodName": function(){}
 
 }});
-var cSomeClass = declarejs.classes("lib.Name"); // access built-in function
+var cSomeClass = declarejs.classes("lib.SomeClass"); // access built-in function
 var SomeObject = new cSomeClass();
 
 ```
@@ -110,25 +110,25 @@ These built-in functions are attached to the *Declarejs* global function.
 ```javascript
 var n = declarejs.cast("50%", "integer");
 ```
-| Functions | Parameters | Returns | Description |
+| Function | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| template() | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
+| template() | **name**:string, **type**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
 | datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like *lib.someDatatype* |
 | cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
 | mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
 | valid() | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted to a defined value. |
 | get() | **classname**:string | class | Gets the requested class. |
-| load() | **Object**:Object, **prop1**:string, [**prop2**:string...] | undefined | Fill a property with a default value *IF* they are undefined. |
-| fill() | **Object**:Object, **prop1**:string, [**prop2**:string...] | undefined | Fill a property with a default value. |
-| make() | **type**:string, [**param1**:mixed], [**param2**:string...] | mixed | Make an object or get the default value of a datatype. |
-| makeApply() | **type**:string, **args**:Array | mixed | Make an object by passing in arguments. |
-| compile() | *none* | undefined | Compile any new declared classes. |
+| load() | **Object**:Object, **property**:string, [**property2**:string...] | undefined | Fill a property with a default value *IF* they are undefined. |
+| fill() | **Object**:Object, **property**:string, [**property2**:string...] | undefined | Fill a property with a default value. |
+| make() | **type**:string, [**parameter**:mixed], [**parameter2**:mixed...] | mixed | Make an object or get the default value of a datatype. |
+| makeApply() | **type**:string, **arguments**:Array | mixed | Make an object by passing in arguments. |
+| compile() | *none* | undefined | Compile any uncompiled declared classes. **Note:** You can precompile classes on page load for performance. |
 | classes() | **names**:object\|string | mixed | Get multiple classes or one class. |
 | config() | **values**:object | undefined | Configure multiple values. |
 | config() | **name**:string, [**value**:mixed] | mixed | Access an individual config value. |
 | member() | **Object**:Object, **name**:string | object | Get object member info. |
-| prop() | **Object**:Object, [**name**:string], [**value**:mixed] | mixed | Access an individual property on an object. |
-| props() | **Object**:Object, [**values**:object] | object | Access properties on an object. **Note:** Will NOT throw an error if a member does not exist. |
+| prop() | **Object**:Object, **name**:string, [**value**:mixed] | mixed | Get or set an individual property on an object. |
+| props() | **Object**:Object, [**values**:object] | object | Get or set properties on an object. **Note:** Will NOT throw an error if a member does not exist. |
 | className() | **mixed**:class\|object | string | Returns the class name. |
 | parentName() | **mixed**:class\|object\|name | string | Returns the parent class name. |
 | parentClass() | **mixed**:class\|object\|name | class | Returns the parent class. |

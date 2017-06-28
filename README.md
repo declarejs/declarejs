@@ -1,4 +1,4 @@
-# declarejs
+# Declarejs
 Most powerful way to create JavaScript classes.  Syntax and features similar to other languages like C# and Java.  Bring structure and control to your client-side code.
 
 - Private, protected, and static members
@@ -77,6 +77,8 @@ var cSomeClass = declarejs.classes("lib.Name"); // access built-in function
 var SomeObject = new cSomeClass();
 
 ```
+**Parameters**
+
 | Parameter | Type | Description |
 | :----- | :----- | :----- |
 | header | string | Declare your class options and parent class. |
@@ -104,18 +106,34 @@ var SomeObject = new cSomeClass();
 
 # Functions
 
-These functions are attached to the *declarejs* global function.
+These built-in functions are attached to the *Declarejs* global function.
 ```javascript
 var n = declarejs.cast("50%", "integer");
 ```
 | Functions | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| template | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
-| datatype | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like "app.emailAddress" |
-| cast | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
-| mustCast | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
-| valid | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted to a defined value. |
-| get | **classname**:string | class | Gets the requested class. |
+| template() | **name**:string, **type1**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
+| datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like *lib.someDatatype* |
+| cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
+| mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
+| valid() | **value**:mixed, **type**:type\|class, **strict**:boolean | boolean | Returns true if value is casted to a defined value. |
+| get() | **classname**:string | class | Gets the requested class. |
+| load() | **Object**:Object, **prop1**:string, [**prop2**:string...] | undefined | Fill a property with a default value *IF* they are undefined. |
+| fill() | **Object**:Object, **prop1**:string, [**prop2**:string...] | undefined | Fill a property with a default value. |
+| make() | **type**:string, [**param1**:mixed], [**param2**:string...] | mixed | Make an object or get the default value of a datatype. |
+| makeApply() | **type**:string, **args**:Array | mixed | Make an object by passing in arguments. |
+| compile() | *none* | undefined | Compile any new declared classes. |
+| classes() | **names**:object\|string | mixed | Get multiple classes or one class. |
+| config() | **values**:object | undefined | Configure multiple values. |
+| config() | **name**:string, [**value**:mixed] | mixed | Access an individual config value. |
+| member() | **Object**:Object, **name**:string | object | Get object member info. |
+| prop() | **Object**:Object, [**name**:string], [**value**:mixed] | mixed | Access an individual property on an object. |
+| props() | **Object**:Object, [**values**:object] | object | Access properties on an object. **Note:** Will NOT throw an error if a member does not exist. |
+| className() | **mixed**:class\|object | string | Returns the class name. |
+| parentName() | **mixed**:class\|object\|name | string | Returns the parent class name. |
+| parentClass() | **mixed**:class\|object\|name | class | Returns the parent class. |
+| debug() | *none* | boolean | Returns true if debug mode is on. |
+| version() | *none* | string | Get the Declarejs version. |
 
 
 # Classes

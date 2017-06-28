@@ -60,36 +60,47 @@ var cPerson = declare.classes("djs.Person");
 var Joe = new cPerson("Joe");
 console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 ```
+
+
 # Module
 
-The global function that serves as the basis for everything in Declarejs.  It has a dual purpose, to create classes and hold other built-in functions (see *Functions* below).
+The global function that serves as the basis for everything in Declarejs.  It has a dual purpose, to create classes and to hold built-in functions (see *Functions*).
 
-| Name | Parameters | Returns | Description |
-| :----- | :----- | :----- | :----- |
-| declarejs() | **header**:string, [**includes**:Array], **handler**:function | class | Define classes using this function. **Note:** Class name must be prefixed and have uppercase first char like "khw.FormControl".|
+```javascript
+declarejs("(options) lib.Name : (parent)", (included...), function(keys, cSelf, cParent, ...){return {
 
-**Header** - String. Declare your class options and parent class.
+	"(options) (type) propName": "somevalue",
+	"(options) (type) methodName": function(){}
+
+}});
+var cSomeClass = declarejs.classes("lib.Name"); // access built-in function
+var SomeObject = new cSomeClass();
+
 ```
-"(abstract) (singleton) my.lib.ClassName ( : prefix.ParentName)"
-```
-**Includes** - Array (optional). Pass in both user-defined classes and native javascript classes.
-```
-["my.lib.UserDefinedClass", "NativeClass", ...]
-```
-**Handler** - Function. Define class members and access included classes. Return new members as a simple object.
-```
-function(keys, cSelf, cParent, cInclude1, cInclude2, ...){return {
-	"(options) (type) property": "somevalue", 	// access is "public" by default but can be "private" or "protected"
-	"(options) (type) methodName": function(){},	// no type means inherit from parent or "mixed" if no parent
-}}
-```
+| Parameter | Type | Description |
+| :----- | :----- | :----- |
+| header | string | Declare your class options and parent class. |
+| includes | Array | Optional. Pass in both user-defined classes and native javascript classes. |
+| handler | function | Define class members and access included classes. Return new members as a simple object. |
+
+**Class Options**
+
+| Option | Description |
+| :----- | :----- |
+| abstract | Cannot be an instance. |
+| singleton | Only one instance allowed. |
+
 **Member Options**
 
-| Option | Member | Description |
-| :----- | :----- | :----- |
-| public | data, method | Accessable outside and outside the instance. The default access type. |
-| protected | data, method | Accessable within the instance only. |
-| private | data, method | Accessable within the instance of a specified class only. |
+| Option | Description |
+| :----- | :----- |
+| public | Accessable outside and outside the instance. Default access. |
+| protected | Accessable within the instance only. |
+| private | Accessable within the instance of a specified class only. |
+| static | Exists on the class and not the instance |
+| final | Cannot be overridden. Methods only. |
+| abstract | Must be overridden. |
+
 
 # Functions
 

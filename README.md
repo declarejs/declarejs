@@ -64,21 +64,21 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 
 # Declaring
 
-Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.  Below will explain the diffent aspects to this function.
+Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.  Below will explain the different aspects to this function.
 
-```javascript
+```
 declarejs(header:string, [includes:Array], handler:function):class
 ```
 
 | Parameter | Type | Description |
 | :----- | :----- | :----- |
 | header | string | Declare your class options and parent class. |
-| includes | Array | Optional. Pass in both user-defined classes and native javascript classes. |
+| includes | Array | **Optional**. Pass in both user-defined classes and native javascript classes. |
 | handler | function | Define class members and access included classes. Return new members as a simple object. |
 
 **Declaration Handler**
 
-```javascript
+```
 function(keys:object, self:class, [parent:class], [include:class], ...):object // returns the members
 ```
 
@@ -86,12 +86,12 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 | :----- | :----- | :----- |
 | keys | object | Holds the names of each class member. See **_Member Protection_**. |
 | self | class | The constructor function of the class that is being declared. |
-| parent | class | Optional. The constructor function of the parent class. |
-| include | class | Optional. The constructor function of the included class. |
+| parent | class | **Optional**. The constructor function of the parent class. |
+| include | class | **Optional**. The constructor function of the included class. |
 
 **Member Protection**
 
-It must be stated in the beginning that member protection is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still a power aspect to Declarejs and here is how it work:  When a member is labeled *protected* or *private* the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* to any outside functions or objects.
+It must be stated in the beginning that member protection is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still a power aspect to Declarejs and here is how it work:  When a member is deemed *protected* or *private* the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* to any outside functions or objects.
 
 ```
 ...
@@ -116,14 +116,14 @@ var cSomeClass = declarejs.classes("lib.SomeClass"); // access built-in function
 var SomeObject = new cSomeClass();
 
 ```
-**Class Options**
+Class Options
 
 | Option | Description |
 | :----- | :----- |
 | abstract | Cannot be an instance. |
 | singleton | Only one instance allowed. |
 
-**Member Options**
+Member Options
 
 | Option | Description |
 | :----- | :----- |
@@ -168,7 +168,7 @@ var n = declarejs.cast("50%", "integer");
 
 
 # Classes
-Some helpful classes that can be used as the foundation for your library.
+Built-in classes that provide an easy way to build your class library.
 
 ### Base
 
@@ -186,7 +186,7 @@ Abstract. Takes care of some basic functionality like accessing object propertie
 
 Abstract. A class that simply holds a property or multiple properties.  Research MVC patterns for more info.
 
-**Hierarchy**: Model / Base*
+**Hierarchy**: Model / Base
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
@@ -198,11 +198,11 @@ Abstract. A class that simply holds a property or multiple properties.  Research
 
 ### Model\<type\>
 
-A parameterized class that takes a datatype or class name. This parameter will determines the data property.
+Parameterized. A class that takes a single datatype or class name. This parameter will determines the data property.
 **Note:** Parent class is dynamically generated based on the parameter.
 
 **Parameters**: type:string<br/>
-**Hierarchy**: *Model\<type\> / Model\<...\> / Data / Model / Base*
+**Hierarchy**: Model\<type\> / Model\<...\> / Data / Model / Base
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
@@ -212,7 +212,7 @@ A parameterized class that takes a datatype or class name. This parameter will d
 
 ### Data
 
-Abstract. A model class that has a single data property.
+Abstract. A class that has a single data property.
 
 **Hierarchy**: Data / Model / Base
 

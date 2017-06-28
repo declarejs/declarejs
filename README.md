@@ -84,6 +84,7 @@ function(keys, cSelf, cParent, cInclude1, cInclude2, ...){return {
 }}
 ```
 **Member Options**
+
 | Option | Member | Description |
 | :----- | :----- | :----- |
 | public | data, method | Accessable outside and outside the instance. The default access type. |

@@ -34,7 +34,7 @@ bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```
 **Hello World**
 ```javascript
-declare("abstract app.Hello", function(keys, cSelf, cParent){return {
+declare("abstract lib.Hello", function(keys, cSelf, cParent){return {
 	
 	"string speak": function(){ // public by default
 		return "Hello";
@@ -42,7 +42,7 @@ declare("abstract app.Hello", function(keys, cSelf, cParent){return {
 	
 }});
 
-declare("app.World : app.Hello", function(keys, cSelf, cParent){return {
+declare("lib.World : lib.Hello", function(keys, cSelf, cParent){return {
 
 	"protected string name": "nobody", 	// shorthand is "pro str name"
 
@@ -56,7 +56,7 @@ declare("app.World : app.Hello", function(keys, cSelf, cParent){return {
 	
 }});
 
-var cPerson = declare.classes("djs.Person");
+var cPerson = declare.classes("lib.Person");
 var Joe = new cPerson("Joe");
 console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 ```
@@ -64,9 +64,9 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 
 # Declaring
 
-Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.  Below will explain the diffent aspects of this function.
+Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.  Below will explain the diffent aspects to this function.
 
-```
+```javascript
 declarejs(header:string, [includes:Array], handler:function):class
 ```
 
@@ -76,34 +76,34 @@ declarejs(header:string, [includes:Array], handler:function):class
 | includes | Array | Optional. Pass in both user-defined classes and native javascript classes. |
 | handler | function | Define class members and access included classes. Return new members as a simple object. |
 
-**The Declaration Handler**
+**Declaration Handler**
 
-```
+```javascript
 function(keys:object, self:class, [parent:class], [include:class], ...):object // returns the members
 ```
 
 | Parameter | Type | Description |
 | :----- | :----- | :----- |
-| keys | object | Holds the names of each class member. See *How Protecting Works*. |
+| keys | object | Holds the names of each class member. See **_Member Protection_**. |
 | self | class | The constructor function of the class that is being declared. |
 | parent | class | Optional. The constructor function of the parent class. |
-| include | class | Optional. The constructor function of the parent class. |
+| include | class | Optional. The constructor function of the included class. |
 
-**How Protecting Works**
+**Member Protection**
 
-It must be stated in the begining that member protection is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still a power aspect to Declarejs and here is how it work:  When a member is labeled *protected* or *private* the name will subsequently be obfuscated. The member names, obfuscated or othewise, are stored on an object that gets passed to the class declaration handler.  **Note:** It is important not to pass the *keys* to any outside functions or objects.
+It must be stated in the beginning that member protection is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still a power aspect to Declarejs and here is how it work:  When a member is labeled *protected* or *private* the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* to any outside functions or objects.
 
 ```
 ...
-console.log(keys); 			// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
-this[keys.secret] = "some"; // protected property
+console.log(keys); 		// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
+this[keys.secret] = "some"; 	// protected property
 this[keys.whisper](); 		// protected method
 this[keys.speak](); 		// public method
-this.speak(); 				// also works
-this.whisper();				// ERROR!
+this.speak(); 			// also works
+this.whisper();			// ERROR!
 ```
 
-**Structure**
+**Declaration Options**
 
 ```javascript
 declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
@@ -184,9 +184,9 @@ Abstract. Takes care of some basic functionality like accessing object propertie
 
 ### Model
 
-Abstract. A class that serves to hold a value or values.
+Abstract. A class that simply holds a property or multiple properties.  Research MVC patterns for more info.
 
-*Model / Base*
+**Hierarchy**: Model / Base*
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
@@ -198,8 +198,8 @@ Abstract. A class that serves to hold a value or values.
 
 ### Model\<type\>
 
-Parameterized.  A class that takes a datatype or class name. This will determine which type of value the model will hold.
-Parent class is dynamically generated based on the parameter.
+A parameterized class that takes a datatype or class name. This parameter will determines the data property.
+**Note:** Parent class is dynamically generated based on the parameter.
 
 **Parameters**: type:string<br/>
 **Hierarchy**: *Model\<type\> / Model\<...\> / Data / Model / Base*
@@ -212,9 +212,9 @@ Parent class is dynamically generated based on the parameter.
 
 ### Data
 
-Abstract. A class that holds a single value.
+Abstract. A model class that has a single data property.
 
-*Data / Model / Base*
+**Hierarchy**: Data / Model / Base
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
@@ -228,7 +228,7 @@ Abstract. A class that holds a single value.
 
 **Classes and Members**
 ```javascript
-declare("abstract djs.Animal", function(keys, self){return {
+declare("abstract lib.Animal", function(keys, self){return {
 
 	"protected string name": "", 	// shorhand is "pro str name"
 	"static Array names": [],	// static member
@@ -242,15 +242,15 @@ declare("abstract djs.Animal", function(keys, self){return {
 	
 }});
 
-declare("djs.Dog : djs.Animal", function(keys, self, parent){return {
+declare("lib.Dog : lib.Animal", function(keys, self, parent){return {
 
 	"speak": function(){return "Woof";}
 	
 }});
 
-declare("djs.Person : djs.Animal", ["djs.Dog"], function(keys, self, parent, cDog){return {
+declare("lib.Person : lib.Animal", ["lib.Dog"], function(keys, self, parent, cDog){return {
 	
-	"protected djs.Dog Dog": undefined,
+	"protected lib.Dog Dog": undefined,
 
 	"__construct": function(name, Dog){
 		parent.__construct.call(this, name);
@@ -263,17 +263,17 @@ declare("djs.Person : djs.Animal", ["djs.Dog"], function(keys, self, parent, cDo
 	
 }});
 
-declare("singleton djs.Jeff : djs.Person", function(keys, self, parent){return {
+declare("singleton lib.Jeff : lib.Person", function(keys, self, parent){return {
 
 	"protected name": "Jeff", 	// string type is implied
 
 }});
 
 var c = declare.classes({
-	Animal: "djs.Animal", 
-	Person: "djs.Person", 
-	Dog: "djs.Dog", 
-	Jeff: "djs.Jeff"
+	Animal: "lib.Animal", 
+	Person: "lib.Person", 
+	Dog: "lib.Dog", 
+	Jeff: "lib.Jeff"
 });
 
 console.log(new c.Person("Joe", new c.Dog("Smuckers")).speak()); // "I'm Joe and have a dog."
@@ -283,7 +283,7 @@ console.log("From: " + c.Animal.names.join(", ")); // "From: Smuckers, Joe, Jeff
 
 **Datatypes and Templates**
 ```javascript
-declare.datatype("djs.propername", "string", function(value, parent){
+declare.datatype("lib.propername", "string", function(value, parent){
 
 	// cast as parent datatype first
 	value = parent(value);
@@ -292,14 +292,14 @@ declare.datatype("djs.propername", "string", function(value, parent){
 	return (value && value.length && value[0].toUpperCase() === value[0]) ? value : undefined;
 });
 
-declare("djs.Vacation : Model", ["List<djs.propername>"], function(keys, self, parent, cNamesList){return {
+declare("lib.Vacation : Model", ["List<lib.propername>"], function(keys, self, parent, cNamesList){return {
 
-	"protected djs.propername title": undefined,
-	"protected List<djs.propername> Places": undefined,
+	"protected lib.propername title": undefined,
+	"protected List<lib.propername> Places": undefined,
 
 	"__construct": function(name, places){
 		parent.__construct.apply(this);
-		this[keys.title] = declare.cast(name, "djs.propername");
+		this[keys.title] = declare.cast(name, "lib.propername");
 		this[keys.Places] = new cNamesList(places);
 	},
 
@@ -309,7 +309,7 @@ declare("djs.Vacation : Model", ["List<djs.propername>"], function(keys, self, p
 
 }});
 
-var cVacation = declare.get("djs.Vacation");
+var cVacation = declare.get("lib.Vacation");
 var RoadTrip = new cVacation("Summer Trip", ["Portand", "San Francisco", "Los Angeles"]);
 console.log(RoadTrip.description());
 ```

@@ -122,8 +122,7 @@ var SomeObject = new cSomeClass();
 | abstract | Cannot be an instance. |
 | singleton | Only one instance allowed. |
 | | ... |
-| Member Options | Description |
-| :----- | :----- |
+| **Member Options** | **Description** |
 | public | Accessable outside and outside the instance. Default access. |
 | protected | Accessable within the instance only. |
 | private | Accessable within the instance of a specified class only. |

@@ -89,21 +89,7 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 | parent | class | **Optional**. The constructor function of the parent class. |
 | include | class | **Optional**. The constructor function of the included class. |
 
-**Understanding Protected Members**
-
-It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
-
-```
-...
-console.log(keys); 		// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
-this[keys.secret] = "Bosco"; 	// protected property
-this[keys.whisper](); 		// protected method
-this[keys.speak](); 		// public method
-this.speak(); 			// also works
-this.whisper();			// ERROR!
-```
-
-**Declaration Options**
+**Declaration Syntax**
 
 ```javascript
 declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
@@ -128,6 +114,20 @@ var SomeObject = new cSomeClass();
 | static | Exists on the class and not the instance |
 | final | Method cannot be overridden. |
 | abstract | Must be overridden. |
+
+**Understanding Protected Members**
+
+It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
+
+```
+...
+console.log(keys); 		// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
+this[keys.secret] = "Bosco"; 	// protected property
+this[keys.whisper](); 		// protected method
+this[keys.speak](); 		// public method
+this.speak(); 			// also works
+this.whisper();			// ERROR!
+```
 
 
 # Functions
@@ -163,7 +163,7 @@ var n = declarejs.cast("50%", "integer");
 
 
 # Classes
-Built-in classes that provide an easy way to build your class library.
+Built-in classes that provide foundation for your own library.
 
 ### Base
 

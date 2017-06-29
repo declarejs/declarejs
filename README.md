@@ -76,7 +76,7 @@ declarejs(header:string, [includes:Array], handler:function):class
 | includes | Array | **Optional**. Pass in other classes to the handler. |
 | handler | function | Define members by returning them as a simple object.  See *Samples*. |
 
-**Declaration Handler**
+### Declaration Handler
 
 ```
 function(keys:object, self:class, [parent:class], [include:class], ...):object // returns the members
@@ -89,7 +89,7 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 | parent | class | **Optional**. The constructor function of the parent class. |
 | include | class | **Optional**. The constructor function of the included class. |
 
-**Declaration Syntax**
+### Declaration Syntax
 
 ```javascript
 declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
@@ -115,7 +115,7 @@ var SomeObject = new cSomeClass();
 | final | Method cannot be overridden. |
 | abstract | Must be overridden. |
 
-**Understanding Protected Members**
+### Understanding Protected Members
 
 It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
 
@@ -215,6 +215,15 @@ Abstract. A class that has a single data property.
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
 | | | | *more in parent...* |
 
+
+
+# Performance
+
+Declarejs was designed with performance in mind.  Here are some items.
+
+- Use shorthand keywords in your declaration.
+- Precompile
+- Debug off
 
 
 

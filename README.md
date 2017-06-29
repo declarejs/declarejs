@@ -91,7 +91,7 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 
 ### Declaration Syntax
 
-```javascript
+```
 declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
 
 	"(options) (type) propName": "value",
@@ -103,24 +103,24 @@ var SomeObject = new cSomeClass();
 
 ```
 
-| Class Options | Description |
+| Class Options | Shorthand | Description |
 | :----- | :----- |
-| abstract | Cannot be an instance. |
-| singleton | Only one instance allowed. |
-| **Member Options** | **Description** |
-| public | **Default**. Accessable inside and outside the instance. |
-| protected | Accessable within the instance only. |
-| private | Accessable within the instance of a specified class only. |
-| static | Exists on the class and not the instance |
-| final | Method cannot be overridden. |
-| abstract | Must be overridden. |
+| abstract | abs | Cannot be an instance. |
+| singleton | sin | Only one instance allowed. |
+| **Member Options** | **Shorthand** | **Description** |
+| public | pub | **Default**. Accessable inside and outside the instance. |
+| protected | pro | Accessable within the instance only. |
+| private | pri | Accessable within the instance of a specified class only. |
+| static | sta | Exists on the class and not the instance |
+| final | fin | Method cannot be overridden. |
+| abstract | abs | Must be overridden. |
 
 ### Understanding Protected Members
 
 It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
 
 ```
-...
+// inside a method...
 console.log(keys); 		// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
 this[keys.secret] = "Bosco"; 	// protected property
 this[keys.whisper](); 		// protected method
@@ -133,8 +133,8 @@ this.whisper();			// ERROR!
 # Functions
 
 These built-in functions are attached to the *Declarejs* global function.
-```javascript
-var n = declarejs.cast("50%", "integer");
+```
+var n = declarejs.cast("50%", "integer"); // example
 ```
 | Function | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
@@ -201,7 +201,7 @@ Parameterized. A class that takes a single datatype or class name. This paramete
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| | | | *more in parent...* |
+| | | | *see parent...* |
 
 
 ### Data
@@ -213,7 +213,21 @@ Abstract. A class that has a single data property.
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| | | | *more in parent...* |
+| | | | *see parent...* |
+
+
+# Datatypes
+
+These are the simplest form of data.
+
+
+### Built-in
+
+Here is a list of existing datatypes with the cooresponding shorthand in **bold**.
+
+|||||
+| :----- | :----- | :----- | :----- |
+| **str**ing | **int**eger | **boo**lean | **sca**lar | 
 
 
 

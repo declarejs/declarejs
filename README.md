@@ -64,7 +64,7 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 
 # Declaring
 
-Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.  Below will explain the different aspects to this function.
+Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.
 
 ```
 declarejs(header:string, [includes:Array], handler:function):class
@@ -73,8 +73,8 @@ declarejs(header:string, [includes:Array], handler:function):class
 | Parameter | Type | Description |
 | :----- | :----- | :----- |
 | header | string | Declare your class options and parent class. |
-| includes | Array | **Optional**. Pass in both user-defined classes and native javascript classes. |
-| handler | function | Define class members and access included classes. Return new members as a simple object. |
+| includes | Array | **Optional**. Pass in other classes to the handler. |
+| handler | function | Define members by returning them as a simple object.  See *Samples*. |
 
 **Declaration Handler**
 
@@ -89,14 +89,14 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 | parent | class | **Optional**. The constructor function of the parent class. |
 | include | class | **Optional**. The constructor function of the included class. |
 
-**Member Protection**
+**Understanding Protected Members**
 
-It must be stated in the beginning that member protection is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still a power aspect to Declarejs and here is how it work:  When a member is deemed *protected* or *private* the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* to any outside functions or objects.
+It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and this is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
 
 ```
 ...
 console.log(keys); 		// {secret: "1cpjp6", whisper: "dy8ko2", talk: "talk"}
-this[keys.secret] = "some"; 	// protected property
+this[keys.secret] = "Bosco"; 	// protected property
 this[keys.whisper](); 		// protected method
 this[keys.speak](); 		// public method
 this.speak(); 			// also works
@@ -116,22 +116,19 @@ var cSomeClass = declarejs.classes("lib.SomeClass"); // access built-in function
 var SomeObject = new cSomeClass();
 
 ```
-Class Options
 
-| Option | Description |
+| Class Options | Description |
 | :----- | :----- |
 | abstract | Cannot be an instance. |
 | singleton | Only one instance allowed. |
-
-Member Options
-
-| Option | Description |
+| | ... |
+| Member Options | Description |
 | :----- | :----- |
 | public | Accessable outside and outside the instance. Default access. |
 | protected | Accessable within the instance only. |
 | private | Accessable within the instance of a specified class only. |
 | static | Exists on the class and not the instance |
-| final | Cannot be overridden. Methods only. |
+| final | Method cannot be overridden. |
 | abstract | Must be overridden. |
 
 
@@ -176,11 +173,11 @@ Abstract. Takes care of some basic functionality like accessing object propertie
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| __construct() | [**values**:object] | *this* | Pass in any initial values. |
-| has() | **name**:string | boolean | Returns true if member exists and is non-undefined. |
-| set() | **name**:string, **value**:mixed | *this* | Will set a member if it exists otherwise an error is thrown. |
-| get() | **name**:string | mixed | Will return a value if the member exists otherwise an error is thrown. |
-| props() | [**values**:object] | object\|*this* | Set and get multiple members depending on which parameter gets passed. |
+| __construct() | [**values**:object] | *this* | Pass in values. |
+| has() | **name**:string | boolean | Returns true if the member is defined. |
+| set() | **name**:string, **value**:mixed | *this* | Sets a value.  Error if the member does not exist. |
+| get() | **name**:string | mixed | Gets a value.  Error if the member does not exist. |
+| props() | [**values**:object] | object\|*this* | Set and get properties. |
 
 ### Model
 

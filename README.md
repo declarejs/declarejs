@@ -91,7 +91,7 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 
 **Understanding Protected Members**
 
-It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and this is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
+It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
 
 ```
 ...
@@ -121,9 +121,8 @@ var SomeObject = new cSomeClass();
 | :----- | :----- |
 | abstract | Cannot be an instance. |
 | singleton | Only one instance allowed. |
-| | ... |
 | **Member Options** | **Description** |
-| public | Accessable outside and outside the instance. Default access. |
+| public | **Default**. Accessable inside and outside the instance. |
 | protected | Accessable within the instance only. |
 | private | Accessable within the instance of a specified class only. |
 | static | Exists on the class and not the instance |
@@ -184,11 +183,10 @@ Abstract. A class that simply holds a property or multiple properties.  Research
 
 **Hierarchy**: Model / Base
 
-| Method | Parameters | Returns | Description |
+| Methods | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
-| | | | *more in parent...* |
-| **Property** | **Type** |  | **Description** |
+| **Properties** | **Type** |  | **Description** |
 | values | object | 
 
 

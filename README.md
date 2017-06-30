@@ -218,16 +218,14 @@ Abstract. A class that has a single data property.
 
 # Datatypes
 
-These are the simplest form of data.
+Here is a list of built-in datatype.  See *Samples* for how to create your own datatype.
 
 
-### Built-in
-
-Here is a list of existing datatypes with the cooresponding shorthand in **bold**.
-
-|||||
-| :----- | :----- | :----- | :----- |
-| **str**ing | **int**eger | **boo**lean | **sca**lar | 
+| Datatype | Short | Parents | Datatype | Short | Parents | 
+| :----- | :----- | :----- | :----- | :----- | :----- |
+| string | str | scalar/mixed | integer | int | number/scalar/mixed | 
+| scalar | sca | mixed | number | num | scalar/mixed | 
+| boolean | boo | scalar/mixed | object | obj | mixed | 
 
 
 

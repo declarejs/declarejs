@@ -219,27 +219,34 @@ Abstract. A class that has a single data property.
 
 # Datatypes
 
-Here is a list of built-in datatype.  See *Samples* to find out how to create your own.
+Declarejs comes with some basic datatypes.  Create a custome datatype by going to *Samples*.
 
 
-| Datatype | Shorthand | Parents | | Datatype | Shorthand | Parents | 
-| :----- | :----- | :----- | :-----  | :----- | :----- | :----- |
-| string | str | scalar/mixed | | integer | int | number / scalar / mixed | 
-| scalar | sca | mixed | | number | num | scalar/mixed | 
-| boolean | boo | scalar/mixed | | object | obj | mixed | 
-| mixed | mix | | | object | obj | mixed | 
-| object | obj | mixed | | function | fun | mixed | 
-| undefined | und | mixed | | null | nul | object / mixed | 
-| class | cla | function / mixed | | type | typ | string / scalar / mixed | 
-| classtype | clt | type / string / scalar / mixed | | datatype | dat | type / string / scalar / mixed | 
+| Datatype | Shorthand | Default | Parents | Notes |
+| :----- | :----- | :----- | :-----  | :----- |
+| string | str | "" | scalar/mixed | |
+| integer | int | 0 | number/scalar/mixed | |
+| scalar | sca | false | mixed | |
+| number | num | 0 | scalar/mixed | |
+| boolean | boo | false | scalar/mixed | |
+| object | obj | {} | mixed | |
+| mixed | mix | undefined | *none* | The root of ALL datatypes. |
+| function | fun | undefined | mixed | |
+| undefined | und | undefined | mixed | |
+| null | nul | null | object/mixed | |
+| class | cla | undefined | function/mixed | A constructor function. |
+| type | typ | "" | string/scalar/mixed | The name of a class or datatype. |
+| classtype | clt | "" | type/ string/scalar/mixed | The name of a class. |
+| datatype | dat | "" | type/ string/scalar/mixed | The name of a datatype. |
 
 # Performance
 
-Declarejs was designed with performance in mind.  Here are some items.
+Declarejs was designed with performance in mind. Here are some helpful tips to remember...
 
-- Use shorthand keywords in your declaration.
-- Precompile
-- Debug off
+1. **Turn off debug**<br/>It is very helpful to develope in debug mode, but remember to turn this off for release. `declare.config("debug", false)`
+2. **Use shorthand**<br/>Minimize file sizes by using shorthand when declaring your classes. See *Declaring* and *Datatypes*. `"pro str name": "Joe"`
+3. **Precomple**<br/>Simple call `declare.compile()` anywhere after your class declarations. Otherwise, this takes place when the first object gets instantiated.
+
 
 
 

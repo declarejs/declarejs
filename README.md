@@ -20,7 +20,8 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 ```
 <script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
 <script type="text/javascript">
-var declare = declarejs; // the global
+declare.config("debug", true); 		// the global
+declare.config("debug", true); 	// the backup global
 ```
 ```
 require.config({
@@ -64,10 +65,10 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 
 # Declaring
 
-Creating new classes, also known as *declaring*, happens when you call the declarejs global function. This will be the starting point for developing your modular code base.
+Creating a new class, also known as *declaring*, happens when you call the `declare` global function. This will be the starting point for developing your modular code base.
 
 ```
-declarejs(header:string, [includes:Array], handler:function):class
+declare(header:string, [includes:Array], handler:function):class
 ```
 
 | Parameter | Type | Description |
@@ -92,13 +93,13 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 ### Declaration Syntax
 
 ```
-declarejs("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
+declare("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
 
 	"(options) (type) propName": "value",
 	"(options) (type) methodName": function(){}
 
 }});
-var cSomeClass = declarejs.classes("lib.SomeClass"); // access built-in function
+var cSomeClass = declare.classes("lib.SomeClass"); // access built-in function
 var SomeObject = new cSomeClass();
 
 ```
@@ -134,7 +135,7 @@ this.whisper();			// ERROR!
 
 These built-in functions are attached to the *Declarejs* global function.
 ```
-var n = declarejs.cast("50%", "integer"); // example
+var n = declare.cast("50%", "integer"); // example
 ```
 | Function | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
@@ -221,13 +222,16 @@ Abstract. A class that has a single data property.
 Here is a list of built-in datatype.  See *Samples* to find out how to create your own.
 
 
-| Datatype | Short | Parents | | Datatype | Short | Parents | 
+| Datatype | Shorthand | Parents | | Datatype | Shorthand | Parents | 
 | :----- | :----- | :----- | :-----  | :----- | :----- | :----- |
-| string | str | scalar/mixed | | integer | int | number/scalar/mixed | 
+| string | str | scalar/mixed | | integer | int | number / scalar / mixed | 
 | scalar | sca | mixed | | number | num | scalar/mixed | 
 | boolean | boo | scalar/mixed | | object | obj | mixed | 
-
-
+| mixed | mix | | | object | obj | mixed | 
+| object | obj | mixed | | function | fun | mixed | 
+| undefined | und | mixed | | null | nul | object / mixed | 
+| class | cla | function / mixed | | type | typ | string / scalar / mixed | 
+| classtype | clt | type / string / scalar / mixed | | datatype | dat | type / string / scalar / mixed | 
 
 # Performance
 

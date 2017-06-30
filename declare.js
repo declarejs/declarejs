@@ -1145,4 +1145,5 @@ declarejs = (function(){
 
 
 // requirejs module?
+if(!window["declare"]) window.declare = declarejs; // global #1
 if(window["define"]) define([], function(){return declarejs;});

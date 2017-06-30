@@ -65,7 +65,7 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 
 # Declaring
 
-Creating a new class, also known as *declaring*, happens when you call the `declare` global function. This will be the starting point for developing your modular code base.
+Creating a new class, also known as *declaring*, happens when you call the `declare()` global function. This will be the starting point for developing your modular code base.
 
 ```
 declare(header:string, [includes:Array], handler:function):class
@@ -77,10 +77,12 @@ declare(header:string, [includes:Array], handler:function):class
 | includes | Array | **Optional**. Pass in other classes to the handler. |
 | handler | function | Define members by returning them as a simple object.  See *Samples*. |
 
-### Declaration Handler
+### Handler
+
+This is the function that gets passed into `declare()`.  It is the most important part of your declaration because it defines the members.
 
 ```
-function(keys:object, self:class, [parent:class], [include:class], ...):object // returns the members
+function(keys:object, self:class, [parent:class], [include:class], ...):object // return new members
 ```
 
 | Parameter | Type | Description |
@@ -90,22 +92,23 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 | parent | class | **Optional**. The constructor function of the parent class. |
 | include | class | **Optional**. The constructor function of the included class. |
 
-### Declaration Syntax
+### Syntax
+
+Class headers and member definitions are written in a way similar to other popular languages.  And, using shorthand will help with development time and file size.
 
 ```
-declare("(options) lib.SomeClass : (parent)", (includes...), function(keys, cSelf, cParent, ...){return {
+declare("(options) lib.SomeClass : (parent)", (includes), function(keys, self, (parent), (include), ...){return {
 
-	"(options) (type) propName": "value",
+	"(options) (type) propName": "",
 	"(options) (type) methodName": function(){}
 
 }});
-var cSomeClass = declare.classes("lib.SomeClass"); // access built-in function
+var cSomeClass = declare.classes("lib.SomeClass");
 var SomeObject = new cSomeClass();
-
 ```
 
 | Class Options | Shorthand | Description |
-| :----- | :----- |
+| :----- | :----- | :----- |
 | abstract | abs | Cannot be an instance. |
 | singleton | sin | Only one instance allowed. |
 | **Member Options** | **Shorthand** | **Description** |
@@ -116,9 +119,9 @@ var SomeObject = new cSomeClass();
 | final | fin | Method cannot be overridden. |
 | abstract | abs | Must be overridden. |
 
-### Understanding Protected Members
+### Protected Members
 
-It must be stated in the beginning that member access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored on an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* object to any outside functions or objects.
+It must be stated in the beginning that protected access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored in an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* parameter to any external functions or objects.
 
 ```
 // inside a method...
@@ -241,11 +244,11 @@ Declarejs comes with some basic datatypes.  Create a custome datatype by going t
 
 # Performance
 
-Declarejs was designed with performance in mind. Here are some helpful tips to remember...
+Declarejs was designed with performance in mind. Here are some helpful tips to keep in mind...
 
-1. **Turn off debug**<br/>It is very helpful to develope in debug mode, but remember to turn this off for release. `declare.config("debug", false)`
-2. **Use shorthand**<br/>Minimize file sizes by using shorthand when declaring your classes. See *Declaring* and *Datatypes*. `"pro str name": "Joe"`
-3. **Precomple**<br/>Simple call `declare.compile()` anywhere after your class declarations. Otherwise, this takes place when the first object gets instantiated.
+1. **Turn off debug**<br/>While it is encouraged to develope in debug mode, please remember to turn this off for release. `declare.config("debug", false)`
+2. **Use shorthand**<br/>Minimize file sizes by using shorthand when declaring your classes: `"pro str name": "Joe"`<br/>See *Declaring* and *Datatypes*.
+3. **Precomple**<br/>Simple call `declare.compile()` once after your class declarations. Otherwise, this takes place automatically during instantiation.
 
 
 

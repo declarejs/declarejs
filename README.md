@@ -20,8 +20,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 ```
 <script type="text/javascript" src="https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js"></script>
 <script type="text/javascript">
-declare.config("debug", true); 		// the global
-declare.config("debug", true); 	// the backup global
+declare.config("debug", true); 		// 'declarejs' also works
 ```
 ```
 require.config({
@@ -79,7 +78,7 @@ declare(header:string, [includes:Array], handler:function):class
 
 ### Handler
 
-This is the function that gets passed into `declare()`.  It is the most important part of your declaration because it defines the members.
+This parameter is an important part of your declaration because it defines the members.
 
 ```
 function(keys:object, self:class, [parent:class], [include:class], ...):object // return new members
@@ -94,7 +93,7 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 
 ### Syntax
 
-Class headers and member definitions are written in a way similar to other popular languages.  And, using shorthand will help with development time and file size.
+Class headers and member definitions are written in a way similar to other popular languages.  Using shorthand-style will help development time and file size.
 
 ```
 declare("(options) lib.SomeClass : (parent)", (includes), function(keys, self, (parent), (include), ...){return {
@@ -119,9 +118,9 @@ var SomeObject = new cSomeClass();
 | final | fin | Method cannot be overridden. |
 | abstract | abs | Must be overridden. |
 
-### Protected Members
+### Access
 
-It must be stated in the beginning that protected access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed *protected* or *private*, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored in an object that gets passed to the declaration handler.  **Note:** It is important not to pass the *keys* parameter to any external functions or objects.
+It must be stated in the beginning that protected access is only designed to keep honest coders honest.  There are ways to get around this feature.  That being said, it is still very powerful and here is how it works:  When a member is deemed `protected` or `private`, the name will subsequently be obfuscated. All member names, obfuscated or othewise, are stored in an object that gets passed to the handler.  **Note:** It is important not to pass the `keys` parameter to any external functions or objects.
 
 ```
 // inside a method...
@@ -136,10 +135,8 @@ this.whisper();			// ERROR!
 
 # Functions
 
-These built-in functions are attached to the *Declarejs* global function.
-```
-var n = declare.cast("50%", "integer"); // example
-```
+These built-in functions are attached to the global function: `var n = declare.cast("50%", "integer");`
+
 | Function | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
 | template() | **name**:string, **type**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
@@ -167,7 +164,8 @@ var n = declare.cast("50%", "integer"); // example
 
 
 # Classes
-Built-in classes that provide foundation for your own library.
+
+These built-in classes perform some basic tasks that you will find helpful.
 
 ### Base
 
@@ -222,7 +220,7 @@ Abstract. A class that has a single data property.
 
 # Datatypes
 
-Declarejs comes with some basic datatypes.  Create a custome datatype by going to *Samples*.
+Declarejs comes with some primative datatypes built-in.  Create custom datatypes on your own, see *Samples*.
 
 
 | Datatype | Shorthand | Default | Parents | Notes |
@@ -233,18 +231,18 @@ Declarejs comes with some basic datatypes.  Create a custome datatype by going t
 | number | num | 0 | scalar/mixed | |
 | boolean | boo | false | scalar/mixed | |
 | object | obj | {} | mixed | |
-| mixed | mix | undefined | *none* | The root of ALL datatypes. |
+| mixed | mix | undefined | *none* | The root of all datatypes. |
 | function | fun | undefined | mixed | |
 | undefined | und | undefined | mixed | |
 | null | nul | null | object/mixed | |
 | class | cla | undefined | function/mixed | A constructor function. |
 | type | typ | "" | string/scalar/mixed | The name of a class or datatype. |
-| classtype | clt | "" | type/ string/scalar/mixed | The name of a class. |
-| datatype | dat | "" | type/ string/scalar/mixed | The name of a datatype. |
+| classtype | clt | "" | type/string/scalar/mixed | The name of a class. |
+| datatype | dat | "" | type/string/scalar/mixed | The name of a datatype. |
 
 # Performance
 
-Declarejs was designed with performance in mind. Here are some helpful tips to keep in mind...
+Declarejs was designed with this in mind. Here are some helpful tips to maximize performance.
 
 1. **Turn off debug**<br/>While it is encouraged to develope in debug mode, please remember to turn this off for release. `declare.config("debug", false)`
 2. **Use shorthand**<br/>Minimize file sizes by using shorthand when declaring your classes: `"pro str name": "Joe"`<br/>See *Declaring* and *Datatypes*.

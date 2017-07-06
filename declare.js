@@ -1,7 +1,7 @@
 
 declarejs = (function(){
 
-	var version = '2.0.10',
+	var version = '2.0.11',
 	debug = true,
 	inspecting = false,
 	userules = false, // no rules for internal (see bottom)

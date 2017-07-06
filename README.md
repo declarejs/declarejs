@@ -86,7 +86,7 @@ function(keys:object, self:class, [parent:class], [include:class], ...):object /
 
 | Parameter | Type | Description |
 | :----- | :----- | :----- |
-| keys | object | Holds the names of each class member. See **_Member Protection_**. |
+| keys | object | Holds the names of each class member. See **_Access_**. |
 | self | class | The constructor function of the class that is being declared. |
 | parent | class | **Optional**. The constructor function of the parent class. |
 | include | class | **Optional**. The constructor function of the included class. |
@@ -167,19 +167,19 @@ These built-in functions are attached to the global function: `var n = declare.c
 
 These built-in classes perform some basic tasks that you will find helpful.
 
-### Base
+### Base Class
 
 Abstract. Takes care of some basic functionality like accessing object properties.
 
 | Method | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| __construct() | [**values**:object] | *this* | Pass in values. |
+| __construct() | [**values**:object] | | Pass in values. |
 | has() | **name**:string | boolean | Returns true if the member is defined. |
 | set() | **name**:string, **value**:mixed | *this* | Sets a value.  Error if the member does not exist. |
 | get() | **name**:string | mixed | Gets a value.  Error if the member does not exist. |
 | props() | [**values**:object] | object\|*this* | Set and get properties. |
 
-### Model
+### Model Class
 
 Abstract. A class that simply holds a property or multiple properties.  Research MVC patterns for more info.
 
@@ -192,7 +192,7 @@ Abstract. A class that simply holds a property or multiple properties.  Research
 | values | object | 
 
 
-### Model\<type\>
+### Model\<type\> Class
 
 Parameterized. A class that takes a single datatype or class name. This parameter will determines the data property.
 **Note:** Parent class is dynamically generated based on the parameter.
@@ -206,7 +206,7 @@ Parameterized. A class that takes a single datatype or class name. This paramete
 | | | | *see parent...* |
 
 
-### Data
+### Data Class
 
 Abstract. A class that has a single data property.
 
@@ -220,7 +220,7 @@ Abstract. A class that has a single data property.
 
 # Datatypes
 
-Declarejs comes with some primative datatypes built-in.  Create custom datatypes on your own, see *Samples*.
+Declarejs comes with some primitive datatypes built-in.  To find out how to create your own datatype see *Samples*.
 
 
 | Datatype | Shorthand | Default | Parents | Notes |
@@ -242,7 +242,7 @@ Declarejs comes with some primative datatypes built-in.  Create custom datatypes
 
 # Performance
 
-Declarejs was designed with this in mind. Here are some helpful tips to maximize performance.
+Declarejs was designed with performance in mind. Here are some helpful tips to remember:
 
 1. **Turn off debug**<br/>While it is encouraged to develope in debug mode, please remember to turn this off for release. `declare.config("debug", false)`
 2. **Use shorthand**<br/>Minimize file sizes by using shorthand when declaring your classes: `"pro str name": "Joe"`<br/>See *Declaring* and *Datatypes*.

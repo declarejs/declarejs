@@ -83,12 +83,12 @@ declarejs = (function(){
 		for(var i=1; i<arguments.length; i++){
 			name = arguments[i];
 			value = Obj.get(name);
-			if(value === undefined) Obj.set(name, Obj["make_" + name]());
+			if(value === undefined) Obj.set(name, Obj["new_" + name]());
 		}
 	},
 
 	fill = function(Obj, name){ // fill property no matter what
-		for(var i=1; i<arguments.length; i++) Obj.set(arguments[i], Obj["make_" + arguments[i]]());
+		for(var i=1; i<arguments.length; i++) Obj.set(arguments[i], Obj["new_" + arguments[i]]());
 	},
 	
 	abstractMethod = function(classname, name){

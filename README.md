@@ -78,7 +78,7 @@ declare(header:string, [includes:Array], handler:function):class
 
 ### Handler
 
-This parameter is an important part of your declaration because it defines the members.
+This is the function that is responsible for defining your class members.  It is the last parameter passed into `declare()`.
 
 ```
 function(keys:object, self:class, [parent:class], [include:class], ...):object // return new members

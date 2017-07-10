@@ -116,6 +116,8 @@ declarejs = (function(){
 
 	templatize = function(type){
 
+		//if(typeof(type) !== "string") debugger;
+
 		var parts = type.substr(0, type.length-1).split("<");
 		if(parts.length <= 1) missingError(type); // not a template
 
@@ -172,7 +174,10 @@ declarejs = (function(){
 	// makes
 
 	make = function(type){
-		if(makers[type]) return makers[type].apply(this, arguments); // "this" is just filler and doesn't mean anything
+		//var args = arguments;
+		//if(type === "pde.Editor") debugger;
+
+		if(makers[type]) return makers[type].call(this, type, arguments); // "this" is just filler and doesn't mean anything
 		if(window[type]){
 			nativetype(type);
 			return make(type);
@@ -188,6 +193,7 @@ declarejs = (function(){
 	},
 
 	makeClass = function(type, args){
+		//if(type === "pde.Editor") debugger;
 		return singles[type] || makeHelper(get(type), args, 1);
 	},
 
@@ -303,12 +309,18 @@ declarejs = (function(){
 					member.type = struct.name;
 				break;
 				// make
+				/*
 				case "make+": case "mak+": struct.preloads[name] = name; // mark as preload (and pass through to "make")
 				case "make":
-					if(!members["make_"+name]) addMember("make_"+name, function(){return make(member.type, true);}, struct); 
+					if(!members["new_"+name]) addMember("new_"+name, function(){return make(member.type, true);}, struct); 
 				break;
 				case "make-": case "mak-": delete struct.preloads[name]; break; // do not preload
 				// /make
+				*/
+				case "set!":
+					struct.preloads[name] = name; // mark as preload
+					if(!members["new_"+name]) addMember("new_"+name, function(){return make(member.type);}, struct); 
+				break;
 				case "get": 
 					if(!members["get_"+name]) addMember("get_"+name, function(){return this[member.key];}, struct); 
 				break;
@@ -316,18 +328,19 @@ declarejs = (function(){
 					if(!members["set_"+name]) addMember("set_"+name, function(value){this[member.key] = cast(value, member.type); return this;}, struct); 
 				break;
 				case "set+": 
+					if(!members["new_"+name]) addMember("new_"+name, function(){return make(member.type);}, struct); 
 					addMember("set_"+name, function(value){
-						if(value === undefined) this[member.key] = this["make_" + name].call(this);
+						if(value === undefined) this[member.key] = this["new_" + name].call(this);
 						else {
 							this[member.key] = cast(value, member.type); 
-							if(this[member.key] === undefined) this[member.key] = this["make_" + name].call(this, value);
+							if(this[member.key] === undefined) this[member.key] = this["new_" + name].call(this, value);
 						}
 						return this;
 					}, struct); 
 				break;
-				case "all": 	parts.push("set", "get", "make"); break;
-				case "all+": 	parts.push("set+", "get", "make"); break;
-				case "all++": 	parts.push("set+", "get", "make+"); break;
+				case "pgs": 	parts.push("pro", "get", "set"); break;
+				case "pgs+": 	parts.push("pro", "get", "set+"); break;
+				case "pgs!": 	parts.push("pro", "get", "set!"); break;
 				default: 
 					if(part.length){
 						if(debug && member.type) malformedError(header);
@@ -677,7 +690,7 @@ declarejs = (function(){
 				else {
 					// construct with preloads
 					proto.__realconstruct = function(){
-						for(var item in preloads) this[keys[item]] = this["make_" + item]();
+						for(var item in preloads) this[keys[item]] = this["new_" + item]();
 						this.__construct.apply(this, arguments);
 					};
 				}
@@ -690,7 +703,7 @@ declarejs = (function(){
 					// as instance creation
 					if(singles[name]) violationError(C_SINGLETON, name);
 					singles[name] = this;
-					for(var item in preloads) this[keys[item]] = this["make_" + item](); // preload?
+					for(var item in preloads) this[keys[item]] = this["new_" + item](); // preload?
 					this.__construct.apply(this, arguments);
 				};
 			}
@@ -718,6 +731,8 @@ declarejs = (function(){
 	},
 
 	missingError = function(name){
+		//if(name === "all") debugger;
+
 		error("missing", name);
 	},
 
@@ -827,17 +842,17 @@ declarejs = (function(){
 			parent.__construct.call(this);
 
 			// date data first
-			if(data === undefined) this[keys.data] = this.make_data();
+			if(data === undefined) this[keys.data] = this.new_data();
 			else this.set_data(data);
 		},
 
-		"mix make_data": emptyFunc,
+		"mix new_data": emptyFunc,
 		
 		"und set_data": function(value){
-			if(value === undefined) this[keys.data] = this.make_data();
+			if(value === undefined) this[keys.data] = this.new_data();
 			else {
 				var value2 = cast(value, this[keys.type]);
-				this[keys.data] = (value2 === undefined) ? this.make_data(value) : value2;
+				this[keys.data] = (value2 === undefined) ? this.new_data(value) : value2;
 			}
 			return this;
 		}
@@ -851,7 +866,7 @@ declarejs = (function(){
 			if(values) this.props(values);
 		},
 
-		"make_data": function(){
+		"new_data": function(){
 			return {};
 		},
 
@@ -913,7 +928,7 @@ declarejs = (function(){
 
 	declare("List : Map", function(keys, self, parent){ return {
 
-		"make_data": function(){
+		"new_data": function(){
 			return [];
 		},
 

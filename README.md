@@ -225,7 +225,7 @@ Declarejs comes with some primitive datatypes built-in.  To find out how to crea
 
 | Datatype | Shorthand | Default | Parents | Notes |
 | :----- | :----- | :----- | :-----  | :----- |
-| string | str | "" | scalar/mixed | |
+| string | str | "" | mixed > scalar > string | |
 | integer | int | 0 | number/scalar/mixed | |
 | scalar | sca | false | mixed | |
 | number | num | 0 | scalar/mixed | |

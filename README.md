@@ -175,7 +175,7 @@ Abstract. Takes care of some basic functionality like accessing object propertie
 | :----- | :----- | :----- | :----- |
 | __construct() | [**values**:object] | | Pass in values. |
 | has() | **name**:string | boolean | Returns true if the member is defined. |
-| set() | **name**:string, **value**:mixed | *this* | Sets a value.  Error if the member does not exist. |
+| set() | **name**:string,<br/>**value**:mixed | *this* | Sets a value.  Error if the member does not exist. |
 | get() | **name**:string | mixed | Gets a value.  Error if the member does not exist. |
 | props() | [**values**:object] | object\|*this* | Set and get properties. |
 
@@ -231,7 +231,7 @@ Declarejs comes with some primitive datatypes built-in.  To find out how to crea
 | number | num | 0 | mixed > scalar > number | |
 | boolean | boo | false | mixed > scalar > boolean | |
 | object | obj | {} | mixed > object | |
-| mixed | mix | undefined |  | The base for all datatypes. |
+| mixed | mix | undefined |  | The base for all. |
 | function | fun | undefined | mixed > function | |
 | undefined | und | undefined | mixed > undefined | |
 | null | nul | null | mixed > object > null | |

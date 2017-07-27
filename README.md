@@ -223,22 +223,22 @@ Abstract. A class that has a single data property.
 Declarejs comes with some primitive datatypes built-in.  To find out how to create your own datatype see *Samples*.
 
 
-| Datatype | Shorthand | Default | Parents | Notes |
+| Datatype | Shorthand | Default | Hierarchy | Notes |
 | :----- | :----- | :----- | :-----  | :----- |
 | string | str | "" | mixed > scalar > string | |
-| integer | int | 0 | number/scalar/mixed | |
-| scalar | sca | false | mixed | |
-| number | num | 0 | scalar/mixed | |
-| boolean | boo | false | scalar/mixed | |
-| object | obj | {} | mixed | |
-| mixed | mix | undefined | *none* | The root of all datatypes. |
-| function | fun | undefined | mixed | |
-| undefined | und | undefined | mixed | |
-| null | nul | null | object/mixed | |
-| class | cla | undefined | function/mixed | A constructor function. |
-| type | typ | "" | string/scalar/mixed | The name of a class or datatype. |
-| classtype | clt | "" | type/string/scalar/mixed | The name of a class. |
-| datatype | dat | "" | type/string/scalar/mixed | The name of a datatype. |
+| integer | int | 0 | mixed > scalar > number > integer | |
+| scalar | sca | false | mixed > scalar | |
+| number | num | 0 | mixed > scalar > number | |
+| boolean | boo | false | mixed > scalar > boolean | |
+| object | obj | {} | mixed > object | |
+| mixed | mix | undefined |  | The base for all datatypes. |
+| function | fun | undefined | mixed > function | |
+| undefined | und | undefined | mixed > undefined | |
+| null | nul | null | mixed > object > null | |
+| class | cla | undefined | mixed > function > class | A constructor function. |
+| type | typ | "" | mixed > scalar > string > type | The name of a class or datatype. |
+| classtype | clt | "" | mixed > scalar > string > type > classtype | The name of a class. |
+| datatype | dat | "" | mixed > scalar > string > type > datatype | The name of a datatype. |
 
 # Performance
 

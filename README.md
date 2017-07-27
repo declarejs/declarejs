@@ -10,7 +10,7 @@ Most powerful way to create JavaScript classes.  Syntax and features similar to 
 - Class templates to minimize redundancy
 - User-defined datatypes
 - Has shorthand option for faster coding
-- Configurable for debugging and performance
+- Configure for debugging or performance
 - No references to "prototype"
 - No spaghetti code
 - No other files required to start

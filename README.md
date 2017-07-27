@@ -64,7 +64,7 @@ console.log(Joe.speak()); 	// "Hello World! I'm Joe."
 
 # Declaring
 
-Creating a new class, also known as *declaring*, happens when you call the `declare()` global function. This will be the starting point for developing your modular code base.
+Creating a new class, also known as *declaring*, happens when you call the `declare()` global function. This will be the starting point for developing your classes.
 
 ```
 declare(header:string, [includes:Array], handler:function):class
@@ -139,7 +139,7 @@ These built-in functions are attached to the global function: `var n = declare.c
 
 | Function | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| template() | **name**:string, **type**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
+| template() | **name**:string,<br/>**type**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
 | datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like *lib.someDatatype* |
 | cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
 | mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
@@ -161,6 +161,29 @@ These built-in functions are attached to the global function: `var n = declare.c
 | parentClass() | **mixed**:class\|object\|name | class | Returns the parent class. |
 | debug() | *none* | boolean | Returns true if debug mode is on. |
 | version() | *none* | string | Get the Declarejs version. |
+
+
+# Datatypes
+
+Declarejs comes with some primitive datatypes built-in.  To find out how to create your own datatype see *Samples*.
+
+
+| Datatype | Shorthand | Default | Hierarchy | Notes |
+| :----- | :----- | :----- | :-----  | :----- |
+| string | str | "" | mixed > scalar > string | |
+| integer | int | 0 | mixed > scalar > number > integer | |
+| scalar | sca | false | mixed > scalar | |
+| number | num | 0 | mixed > scalar > number | |
+| boolean | boo | false | mixed > scalar > boolean | |
+| object | obj | {} | mixed > object | |
+| mixed | mix | undefined |  | The base for all. |
+| function | fun | undefined | mixed > function | |
+| undefined | und | undefined | mixed > undefined | |
+| null | nul | null | mixed > object > null | |
+| class | cla | undefined | mixed > function > class | Constructor function. |
+| type | typ | "" | mixed > scalar > string > type | Name of a class or datatype. |
+| classtype | clt | "" | mixed > scalar > string > type > classtype | Name of a class. |
+| datatype | dat | "" | mixed > scalar > string > type > datatype | Name of a datatype. |
 
 
 # Classes
@@ -217,28 +240,6 @@ Abstract. A class that has a single data property.
 | each() | **handler**:function | *this* | Iterates the values object and passes the key and value to the handlers. |
 | | | | *see parent...* |
 
-
-# Datatypes
-
-Declarejs comes with some primitive datatypes built-in.  To find out how to create your own datatype see *Samples*.
-
-
-| Datatype | Shorthand | Default | Hierarchy | Notes |
-| :----- | :----- | :----- | :-----  | :----- |
-| string | str | "" | mixed > scalar > string | |
-| integer | int | 0 | mixed > scalar > number > integer | |
-| scalar | sca | false | mixed > scalar | |
-| number | num | 0 | mixed > scalar > number | |
-| boolean | boo | false | mixed > scalar > boolean | |
-| object | obj | {} | mixed > object | |
-| mixed | mix | undefined |  | The base for all. |
-| function | fun | undefined | mixed > function | |
-| undefined | und | undefined | mixed > undefined | |
-| null | nul | null | mixed > object > null | |
-| class | cla | undefined | mixed > function > class | A constructor function. |
-| type | typ | "" | mixed > scalar > string > type | The name of a class or datatype. |
-| classtype | clt | "" | mixed > scalar > string > type > classtype | The name of a class. |
-| datatype | dat | "" | mixed > scalar > string > type > datatype | The name of a datatype. |
 
 # Performance
 

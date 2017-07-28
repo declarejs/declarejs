@@ -36,7 +36,7 @@ bower install https://cdn.rawgit.com/declarejs/declarejs/2.0.9/declare.js
 ```javascript
 declare("abstract lib.Hello", function(keys, cSelf, cParent){return {
 	
-	"string speak": function(){ // public by default
+	"string speak": function(){
 		return "Hello";
 	}
 	
@@ -44,13 +44,13 @@ declare("abstract lib.Hello", function(keys, cSelf, cParent){return {
 
 declare("lib.World : lib.Hello", function(keys, cSelf, cParent){return {
 
-	"protected string name": "nobody", 	// shorthand is "pro str name"
+	"protected string name": "nobody", 	// or "pro str name"
 
 	"__construct": function(name){
 		if(name) declare.set(this, keys.name);
 	},
 	
-	"speak": function(){ // string type implied
+	"string speak": function(){
 		return cParent.speak.call(this) + " World! I'm " + this[keys.name];
 	}
 	
@@ -139,7 +139,7 @@ These built-in functions are attached to the global function: `var n = declare.c
 
 | Function | Parameters | Returns | Description |
 | :----- | :----- | :----- | :----- |
-| template() | **name**:string,<br/>**type**:string, [**type2**:string...], **handler**:function | *none* | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
+| template() | **name**:string,<br/>**type**:string, [**type2**:string...], **handler**:function | undefined | Generate datatypes and classes dynamically by passing parameters during runtime.  **Note:** Possible values for *type* are "string", "integer", "number". |
 | datatype() | **name**:string, **parent**:datatype, **handler**:function | integer | Create a new datatype. **Note:** Must be prefixed and have lowercase first char like *lib.someDatatype* |
 | cast() | **value**:mixed, **type**:type\|class | mixed | Convert a value to the specified type.  Pass in a type name or constructor (native or otherwise). |
 | mustCast() | **value**:mixed, **type**:type\|class | mixed | Does the same as *cast()* but throws an error if *undefined*. |
@@ -148,8 +148,8 @@ These built-in functions are attached to the global function: `var n = declare.c
 | load() | **Object**:Object, **property**:string, [**property2**:string...] | undefined | Fill a property with a default value *IF* they are undefined. |
 | fill() | **Object**:Object, **property**:string, [**property2**:string...] | undefined | Fill a property with a default value. |
 | make() | **type**:string, [**parameter**:mixed], [**parameter2**:mixed...] | mixed | Make an object or get the default value of a datatype. |
-| makeApply() | **type**:string, **arguments**:Array | mixed | Make an object by passing in arguments. |
-| compile() | *none* | undefined | Compile any uncompiled declared classes. **Note:** You can precompile classes on page load for performance. |
+| makeApply() | **type**:string, **parameters**:Array | mixed | Make an object by passing in arguments. |
+| compile() | | undefined | Compile any uncompiled declared classes.<br/>**Note:** You can precompile classes on page load for performance. |
 | classes() | **names**:object\|string | mixed | Get multiple classes or one class. |
 | config() | **values**:object | undefined | Configure multiple values. |
 | config() | **name**:string, [**value**:mixed] | mixed | Access an individual config value. |
@@ -159,8 +159,8 @@ These built-in functions are attached to the global function: `var n = declare.c
 | className() | **mixed**:class\|object | string | Returns the class name. |
 | parentName() | **mixed**:class\|object\|name | string | Returns the parent class name. |
 | parentClass() | **mixed**:class\|object\|name | class | Returns the parent class. |
-| debug() | *none* | boolean | Returns true if debug mode is on. |
-| version() | *none* | string | Get the Declarejs version. |
+| debug() | | boolean | Returns true if debug mode is on. |
+| version() | | string | Get the Declarejs version. |
 
 
 # Datatypes
@@ -170,17 +170,17 @@ Declarejs comes with some primitive datatypes built-in.  To find out how to crea
 
 | Datatype | Shorthand | Default | Hierarchy | Notes |
 | :----- | :----- | :----- | :-----  | :----- |
-| string | str | "" | mixed > scalar > string | |
-| integer | int | 0 | mixed > scalar > number > integer | |
-| scalar | sca | false | mixed > scalar | |
-| number | num | 0 | mixed > scalar > number | |
-| boolean | boo | false | mixed > scalar > boolean | |
-| object | obj | {} | mixed > object | |
 | mixed | mix | undefined |  | The base for all. |
-| function | fun | undefined | mixed > function | |
 | undefined | und | undefined | mixed > undefined | |
-| null | nul | null | mixed > object > null | |
+| function | fun | undefined | mixed > function | |
 | class | cla | undefined | mixed > function > class | Constructor function. |
+| object | obj | {} | mixed > object | |
+| null | nul | null | mixed > object > null | |
+| scalar | sca | false | mixed > scalar | |
+| boolean | boo | false | mixed > scalar > boolean | |
+| number | num | 0 | mixed > scalar > number | |
+| integer | int | 0 | mixed > scalar > number > integer | |
+| string | str | "" | mixed > scalar > string | |
 | type | typ | "" | mixed > scalar > string > type | Name of a class or datatype. |
 | classtype | clt | "" | mixed > scalar > string > type > classtype | Name of a class. |
 | datatype | dat | "" | mixed > scalar > string > type > datatype | Name of a datatype. |

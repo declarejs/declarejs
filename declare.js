@@ -234,6 +234,7 @@ declarejs = (function(){
 	},
 
 	getClasses = function(obj){
+		if(typeof(obj) === "string") return get(item);
 		var obj2 = {};
 		for(var item in obj) obj2[item] = get(obj[item]);
 		return obj2;
@@ -1159,6 +1160,8 @@ declarejs = (function(){
 })();
 
 
-// requirejs module?
-if(!window["declare"]) window.declare = declarejs; // global #1
+// alt global
+if(!window["declare"]) window.declare = declarejs;
+
+// require module
 if(window["define"]) define([], function(){return declarejs;});
